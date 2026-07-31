@@ -9,9 +9,9 @@ namespace MafiaManager.Core.Interfaces
     public interface IGame : IEntity
     {
         /// <summary>
-        /// Время, отведеннное на голосование
+        /// Настройки текущей игры
         /// </summary>
-        public int TimeDelay { get; set; }
+        public IGameSettings GameSettings { get; }
 
         /// <summary>
         ///  Фаза игры

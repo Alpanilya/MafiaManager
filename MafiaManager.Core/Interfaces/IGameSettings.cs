@@ -8,6 +8,11 @@ namespace MafiaManager.Core.Interfaces
     public interface IGameSettings
     {
         /// <summary>
+        /// Время, отведеннное на голосование
+        /// </summary>
+        public int TimeDelay { get; set; }
+
+        /// <summary>
         /// Кол-во игроков
         /// </summary>
         public int PlayerCount { get; set; }

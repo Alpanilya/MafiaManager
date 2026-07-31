@@ -6,7 +6,7 @@ namespace MafiaManager.Core.Entities
 {
     public class Game : Entity, IGame
     {
-        public int TimeDelay { get; set; }
+        public IGameSettings GameSettings { get; set; }
 
         public GameState GameState { get; set; }
 

@@ -8,5 +8,7 @@ namespace MafiaManager.Core.Entities
         public int PlayerCount { get; set; }
 
         public IList<IRole> Roles { get; set; }
+
+        public int TimeDelay { get; set; }
     }
 }
