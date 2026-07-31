@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>false</ImplicitUsings>
-    <Nullable>false</Nullable>
+	<Nullable>disable</Nullable>
+	<ImplicitUsings>false</ImplicitUsings>
   </PropertyGroup>
 
 </Project>
