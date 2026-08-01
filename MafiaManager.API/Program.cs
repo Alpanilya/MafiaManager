@@ -21,11 +21,23 @@ namespace MafiaManager.Api
                 .AddDistributedMemoryCache()
                 .AddHttpContextAccessor();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowWebClient", policy =>
+                {
+                    policy.WithOrigins("https://localhost:7256", "http://localhost:5184")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
             var app = builder
                 .Build();
 
             app
                 .UseHttpsRedirection();
+
+            app
+                .UseCors("AllowWebClient");
 
             app
                 .MapControllers();

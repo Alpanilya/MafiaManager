@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using MafiaManager.Core.Converters;
+using System.Text.Json.Serialization;
 
 namespace MafiaManager.Core.Interfaces
 {
     /// <summary>
     /// Представление настроек игры
     /// </summary>
+
+    [JsonConverter(typeof(GameSettingsConverter))]
     public interface IGameSettings
     {
         /// <summary>
@@ -20,6 +23,6 @@ namespace MafiaManager.Core.Interfaces
         /// <summary>
         /// Список доступных ролей игроков
         /// </summary>
-        public IList<IRole> Roles {  get; set; }
+        public IRole[] Roles {  get; set; }
     }
 }

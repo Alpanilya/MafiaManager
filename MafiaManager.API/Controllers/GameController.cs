@@ -8,10 +8,10 @@ namespace MafiaManager.Api.Controllers
     {
         private readonly Role[] DefaultRoles =
             [
-                new() { Name = "Mafia", Color = System.Drawing.Color.Red },
-                new() { Name = "Sheriff", Color = System.Drawing.Color.Green },
-                new() { Name = "Town", Color = System.Drawing.Color.Gray },
-                new() { Name = "Doctor", Color = System.Drawing.Color.Green },
+                new() { Name = "Мафия", Color = "#E63946" },
+                new() { Name = "Шериф", Color = "#2A9D8F" },
+                new() { Name = "Мирный", Color = "#8D99AE" },
+                new() { Name = "Доктор", Color = "#457B9D" },
             ];
 
         [HttpGet("getGameSettings")]
@@ -19,7 +19,8 @@ namespace MafiaManager.Api.Controllers
         {
             var gameSettings = new GameSettings()
             {
-                Roles = DefaultRoles
+                Roles = DefaultRoles,
+                TimeDelay = 60
             };
 
             return this.Ok(gameSettings);

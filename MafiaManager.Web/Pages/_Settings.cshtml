@@ -1,0 +1,80 @@
+﻿<div class="modal fade" id="settingsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">⚙️ Настройки новой игры</h5>
+            </div>
+
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="mb-3">
+                        <label for="playerCount" 
+                               class="form-label fw-semibold">
+                               Количество игроков
+                        </label>
+
+                        <input type="number" 
+                               class="form-control bg-body-tertiary border-secondary"
+                               id="playerCount"
+                               min="0" 
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="timeDelay" class="form-label fw-semibold">Время на ходы (сек)</label>
+
+                        <input type="number" 
+                               class="form-control bg-body-tertiary border-secondary" 
+                               id="timeDelay" 
+                               min="0" 
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white fw-semibold d-flex justify-content-between">
+                            <span>Список ролей</span>
+
+                            <small class="text-secondary"
+                                   id="rolesCount">
+                                Загрузка...
+                            </small>
+                        </label>
+
+                        <div id="modalRolesList"
+                             class="d-flex flex-column gap-1 mb-3"
+                             style="max-height: 180px;">
+                        </div>
+
+                        <div class="input-group border-secondary">
+                            <input type="text" 
+                                id="newRoleName" 
+                                class="form-control" 
+                                placeholder="Новая роль...">
+
+                            <input type="color" 
+                                   id="newRoleColor"
+                                   class="form-control form-control-color w-25 flex-grow-0"
+                                   value="Red">
+
+                            <button class="btn btn-success flex-grow-0"
+                                    type="button" 
+                                    onclick="addCustomRole()">+</button>
+                        </div>
+                    </div>
+
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3" id="playersGrid">
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer border-secondary">
+                <button type="button" 
+                        class="btn btn-danger w-100 fw-bold py-2" 
+                        onclick="startGame()">
+                    Начать игру
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
