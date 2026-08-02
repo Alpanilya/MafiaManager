@@ -4,7 +4,7 @@ namespace MafiaManager.Core.Entities
 {
     public class GameSettings : IGameSettings
     {
-        public int PlayerCount { get; set; }
+        public IPlayer[] Players { get; set; }
 
         public IRole[] Roles { get; set; }
 

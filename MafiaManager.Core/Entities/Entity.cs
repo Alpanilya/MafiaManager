@@ -7,7 +7,7 @@ namespace MafiaManager.Core.Entities
 {
     public class Entity : IEntity, INotifyPropertyChanged
     {
-        public int ID { get; }
+        public int ID { get; set; }
 
         public string Name { get; set; }
 

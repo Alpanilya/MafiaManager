@@ -16,9 +16,9 @@ namespace MafiaManager.Core.Interfaces
         public int TimeDelay { get; set; }
 
         /// <summary>
-        /// Кол-во игроков
+        /// Список игроков
         /// </summary>
-        public int PlayerCount { get; set; }
+        public IPlayer[] Players { get; set; }
 
         /// <summary>
         /// Список доступных ролей игроков
