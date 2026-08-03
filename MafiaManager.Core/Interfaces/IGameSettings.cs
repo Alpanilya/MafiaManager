@@ -1,4 +1,5 @@
 ﻿using MafiaManager.Core.Converters;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace MafiaManager.Core.Interfaces
@@ -18,11 +19,11 @@ namespace MafiaManager.Core.Interfaces
         /// <summary>
         /// Список игроков
         /// </summary>
-        public IPlayer[] Players { get; set; }
+        public IList<IPlayer> Players { get; set; }
 
         /// <summary>
         /// Список доступных ролей игроков
         /// </summary>
-        public IRole[] Roles {  get; set; }
+        public IList<IRole> Roles {  get; set; }
     }
 }

@@ -1,0 +1,19 @@
+﻿<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3" id="playersGrid">
+
+    <div v-for="player in players"
+         :key="getId(player)"
+         class="col">
+        <div class="card bg-dark text-white border-2 text-center p-1" 
+             :style="{ borderColor: getRoleColor(player.Role) }">
+
+            <div class="display-6 fw-bold"> {{ getId(player) }}</div>
+
+            <small class="text-uppercase mt-1">{{player.Name}}</small>
+
+        </div>
+    </div>
+    
+    <div v-if="playersCount === 0" class="text-secondary text-center p-2">
+        <small>Укажите кол-во игроков</small>
+    </div>
+</div>

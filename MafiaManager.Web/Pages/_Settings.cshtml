@@ -1,4 +1,12 @@
-﻿<div class="modal fade" id="settingsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+﻿@using System.Text.Json
+@model MafiaManager.Core.Entities.GameSettings
+
+<div id="settingsModal" 
+     class="modal fade"
+     data-bs-backdrop="static" 
+     data-bs-keyboard="false" 
+     tabindex="-1" 
+     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
 
@@ -7,66 +15,37 @@
             </div>
 
             <div class="modal-body">
-                <form id="settingsForm">
-                    <div class="mb-3">
-                        <label for="playerCount" 
-                               class="form-label fw-semibold">
-                               Количество игроков
-                        </label>
+                <div class="mb-3">
+                    <label  for="playerCount" 
+                            class="form-label fw-semibold">
+                            Количество игроков:
+                    </label>
 
-                        <input type="number" 
-                               class="form-control bg-body-tertiary border-secondary"
-                               id="playerCount"
-                               min="0"
-                               max="100"
-                               required>
-                    </div>
+                    <input type="number" 
+                            class="form-control bg-body-tertiary border-secondary"
+                            id="playerCount"
+                            v-model.number="playersCount"
+                            min="0" 
+                            max="100"
+                            required>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="timeDelay" class="form-label fw-semibold">Время на ходы (сек)</label>
+                <div class="mb-3">
+                    <label for="timeDelay" 
+                           class="form-label fw-semibold">Время на ходы (сек)
+                    </label>
 
-                        <input type="number" 
-                               class="form-control bg-body-tertiary border-secondary" 
-                               id="timeDelay" 
-                               min="0" 
-                               required>
-                    </div>
+                    <input type="number" 
+                            class="form-control bg-body-tertiary border-secondary" 
+                            id="timeDelay" 
+                            min="0"
+                            value="@Model.TimeDelay"
+                            required>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-white fw-semibold d-flex justify-content-between">
-                            <span>Список ролей</span>
+                <partial name="_RolesList" />
 
-                            <small class="text-secondary"
-                                   id="rolesCount">
-                                Загрузка...
-                            </small>
-                        </label>
-
-                        <div id="modalRolesGrid"
-                             class="d-flex flex-column gap-1 mb-3 overflow-y-auto"
-                             style="max-height: 180px;">
-                        </div>
-
-                        <div class="input-group border-secondary">
-                            <input type="text" 
-                                id="newRoleName" 
-                                class="form-control" 
-                                placeholder="Новая роль...">
-
-                            <input type="color" 
-                                   id="newRoleColor"
-                                   class="form-control form-control-color w-25 flex-grow-0"
-                                   value="Red">
-
-                            <button class="btn btn-success flex-grow-0"
-                                    type="button" 
-                                    onclick="appendCustomRole()">+</button>
-                        </div>
-                    </div>
-
-                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3" id="playersGrid">
-                    </div>
-                </form>
+                <partial name="_PlayerList" />
             </div>
 
             <div class="modal-footer border-secondary overflow-y-auto">
@@ -79,3 +58,14 @@
         </div>
     </div>
 </div>
+
+<script type"module">
+    @{
+        var settingsJson = JsonSerializer.Serialize(Model);
+    }
+
+    window.gameSettings = @Html.Raw(settingsJson);
+
+</script>
+
+<script type="module" src="~/js/settings.js"></script>
