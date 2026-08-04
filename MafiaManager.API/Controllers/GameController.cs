@@ -36,7 +36,7 @@ namespace MafiaManager.Api.Controllers
             Game game = new()
             {
                 GameSettings = gameSettings,
-                Players = [],
+                Players = gameSettings.Players,
             };
 
             return this.Ok(game);

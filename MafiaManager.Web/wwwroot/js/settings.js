@@ -1,4 +1,4 @@
-﻿import { createApp, ref, watch } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
+﻿import { createApp, ref, watch, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
 
 const settings = window.gameSettings;
 
@@ -111,9 +111,14 @@ function playersHandle(defaultRole) {
         globalHandler.removeById(players.value, id);
     }
 
+    function changePlayerRole(player, role) {
+        player.Role = role;
+    }
+
     return {
         players,
-        playersCount
+        playersCount,
+        changePlayerRole
     }
 };
 
@@ -122,8 +127,65 @@ createApp({
         const rolesHandler = rolesHandle();
         const playerHandler = playersHandle(rolesHandler.roles.value[3]);
         const globalHandler = global();
+        const timeDelay = ref(settings.TimeDelay);
+
+
+        let modalInstance = null;
+
+        onMounted(() => {
+            const modalElement = document.getElementById('settingsModal');
+            if (modalElement) {
+                modalInstance = new bootstrap.Modal(modalElement);
+                modalInstance.show();
+            }
+        });
+
+        async function startGame() {
+            if (timeDelay.value <= 0) {
+                alert('Время на ходы должно быть больше 0');
+
+                return;
+            }
+
+            if (playerHandler.playersCount.value <= 0) {
+                alert('Должен быть хотя бы один игрок');
+
+                return;
+            }
+
+            if (rolesHandler.roles.value.length === 0) {
+                alert('Должна быть хотя бы одна роль');
+
+                return;
+            }
+
+            try {
+                const response = await fetch('https://localhost:7001/api/game/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                const gameInstance = await response.json();
+
+                window.dispatchEvent(new CustomEvent('onGameStarted', {
+                    detail: gameInstance
+                }));
+
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+
+            } catch (error) {
+                alert('Ошибка при запуске игры:', error);
+            }
+        }
 
         return {
+            timeDelay,
+            startGame,
             ...globalHandler,
             ...rolesHandler,
             ...playerHandler

@@ -1,12 +1,11 @@
 ﻿@using System.Text.Json
 @model MafiaManager.Core.Entities.GameSettings
 
-<div id="settingsModal" 
+<div id="settingsModal"
      class="modal fade"
      data-bs-backdrop="static" 
-     data-bs-keyboard="false" 
-     tabindex="-1" 
-     aria-hidden="true">
+     data-bs-keyboard="false"
+     >
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
 
@@ -27,6 +26,7 @@
                             v-model.number="playersCount"
                             min="0" 
                             max="100"
+                            @@input="playersCount = Math.min(100, playersCount)"
                             required>
                 </div>
 
@@ -39,7 +39,8 @@
                             class="form-control bg-body-tertiary border-secondary" 
                             id="timeDelay" 
                             min="0"
-                            value="@Model.TimeDelay"
+                            v-model.number="timeDelay"
+                            @@input ="timeDelay = Math.min(3600, timeDelay)"
                             required>
                 </div>
 
@@ -49,9 +50,9 @@
             </div>
 
             <div class="modal-footer border-secondary overflow-y-auto">
-                <button type="button" 
+                <button type="button"
                         class="btn btn-danger w-100 fw-bold py-2" 
-                        onclick="startGame()">
+                        @@click="startGame()">
                     Начать игру
                 </button>
             </div>
@@ -59,7 +60,7 @@
     </div>
 </div>
 
-<script type"module">
+<script type="module">
     @{
         var settingsJson = JsonSerializer.Serialize(Model);
     }

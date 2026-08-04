@@ -26,16 +26,16 @@ namespace MafiaManager.Web
                 {
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.WriteIndented = true;
                 });
 
-            // Регистрируем JsonSerializerOptions как Scoped или Singleton
             builder.Services.AddSingleton<JsonSerializerOptions>(provider =>
             {
                 return new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true
+                    WriteIndented = true,
                 };
             });
 

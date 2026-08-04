@@ -1,11 +1,14 @@
-﻿using MafiaManager.Shared.Enums;
+﻿using MafiaManager.Core.Converters;
+using MafiaManager.Shared.Enums;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace MafiaManager.Core.Interfaces
 {
     /// <summary>
     /// Представление игры
     /// </summary>
+    [JsonConverter(typeof(GameConverter))]
     public interface IGame : IEntity
     {
         /// <summary>
