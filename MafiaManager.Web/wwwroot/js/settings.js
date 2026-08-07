@@ -1,19 +1,23 @@
-﻿import { createApp, ref, watch, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
+﻿import { createApp, ref, watch, onMounted, computed } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
 
-const settings = window.gameSettings;
-
-function global() {
+function globalHandle() {
     const getLastID = (array) => {
-        if (array.length === 0)
+        if (!array || array.length === 0)
             return 0;
 
-        return Math.max(...array.map(i => getId(i)));
+        return Math.max(...array.map(i => getEntityId(i)));
     }
 
-    const getId = (item) => item.ID;
+    function getEntityId(item) {
+        return item?.ID ?? item?.id;
+    }
+
+    function getEntityName(item, defaultName = null) {
+        return item?.Name ?? item?.name ?? defaultName;
+    }
 
     function removeById(array, id) {
-        const index = array.findIndex(r => getId(r) === id);
+        const index = array.findIndex(item => getEntityId(item) === id);
         if (index !== -1) {
             array.splice(index, 1);
         }
@@ -21,20 +25,21 @@ function global() {
 
     return {
         getLastID,
-        getId,
-        removeById
+        getEntityId,
+        getEntityName,
+        removeById,
     }
 }
 
-function rolesHandle(defaultColor = '#FF0000') {
-    const globalHandler = global();
-
-    const roles = ref(settings.Roles);
+function rolesHandle(initRoles, defaultColor = '#FF0000') {
+    const globalHandler = globalHandle();
+    const roles = ref(initRoles);
     const newRoleName = ref('');
     const newRoleColor = ref(defaultColor);
-    const getRoleName = (r) => r?.Name ?? 'Без Роли';
-    const getRoleColor = (r) => r?.Color ?? defaultColor;
-    const getRoles = () => roles;
+
+    function getRoleColor(r) {
+        return r?.Color ?? r?.color ?? defaultColor;
+    }
 
     function appendCustomRole() {
         const name = newRoleName.value.trim();
@@ -54,24 +59,28 @@ function rolesHandle(defaultColor = '#FF0000') {
         newRoleName.value = '';
     }
 
+    function setRoles(items) {
+        roles.value = items;
+    }
+
     return {
         roles,
         newRoleName,
         newRoleColor,
-        getRoleName,
         getRoleColor,
-        appendCustomRole
+        appendCustomRole,
+        setRoles
     };
 };
 
-function playersHandle(defaultRole) {
-    const globalHandler = global();
-
-    const players = ref(settings.Players);
-    const playersCount = ref(players.value.length);
+function playersHandle(initPlayers) {
+    const globalHandler = globalHandle();
+    const players = ref(initPlayers);
+    const playersCount = ref(0);
+    const defaultRole = ref(null);
 
     watch(playersCount, (newValue, oldValue) => {
-        const diff = newValue - oldValue;
+        const diff = newValue - players.value.length;
         if (diff > 0) {
             appendPlayers(diff);
         }
@@ -93,7 +102,7 @@ function playersHandle(defaultRole) {
             "State": 0,
             "ID": id,
             "Name": `Игрок ${id}`,
-            "Role": defaultRole
+            "Role": defaultRole.value
         }
 
         players.value.push(player);
@@ -115,80 +124,142 @@ function playersHandle(defaultRole) {
         player.Role = role;
     }
 
+    function getPlayerRole(player) {
+        return player?.Role ?? player?.role;
+    }
+
+    function setPlayers(items) {
+        players.value = items;
+        playersCount.value = items.length;
+    }
+
+    function getPlayersAlive(players) {
+        return players.filter(i => (i.State ?? i.state) === 0)
+    }
+
+    function setDefaultRole(role) {
+        defaultRole.value = role
+    }
+
     return {
         players,
         playersCount,
-        changePlayerRole
+        changePlayerRole,
+        getPlayerRole,
+        setPlayers,
+        setDefaultRole
     }
 };
 
-createApp({
-    setup() {
-        const rolesHandler = rolesHandle();
-        const playerHandler = playersHandle(rolesHandler.roles.value[3]);
-        const globalHandler = global();
-        const timeDelay = ref(settings.TimeDelay);
+function gameSettingsHandle() {
+    const globalHandler = globalHandle();
+    const rolesHandler = rolesHandle([]);
+    const playerHandler = playersHandle();
+
+    const settings = computed(() => ({
+        ...baseSettings,
+        roles: rolesHandler.roles.value,
+        players: playerHandler.players.value,
+        timeDelay: timeDelay.value,
+    }));
+
+    const timeDelay = ref(null);
+    let modalInstance = null;
+    let baseSettings = {};
+
+    async function setDefaultSettings() {
+        const currentSettings = await getGameSettings();
+
+        baseSettings = currentSettings;
+
+        const roles = currentSettings.Roles ?? currentSettings.roles;
+        const players = currentSettings.Players ?? currentSettings.players
+        const currentTimeDelay = currentSettings?.TimeDelay ?? currentSettings?.timeDelay;
+        const defaultRole = currentSettings.DefaultRole ?? currentSettings.defaultRole;
+
+        if (roles) {
+            rolesHandler.setRoles(roles);
+        }
+
+        if (players) {
+            playerHandler.setPlayers(players);
+        }
+
+        if (currentTimeDelay)
+            timeDelay.value = currentTimeDelay
 
 
-        let modalInstance = null;
+        if (defaultRole) {
+            playerHandler.setDefaultRole(defaultRole);
+        }
 
-        onMounted(() => {
-            const modalElement = document.getElementById('settingsModal');
-            if (modalElement) {
-                modalInstance = new bootstrap.Modal(modalElement);
-                modalInstance.show();
+        const modalElement = document.getElementById('settingsModal');
+
+        if (modalElement) {
+            modalInstance = new bootstrap.Modal(modalElement);
+            modalInstance.show();
+        }
+    };
+
+    async function getGameSettings() {
+        const response = await fetch('https://localhost:7001/api/game/getGameSettings', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
 
-        async function startGame() {
-            if (timeDelay.value <= 0) {
-                alert('Время на ходы должно быть больше 0');
+        return await response.json();
+    }
 
-                return;
-            }
-
-            if (playerHandler.playersCount.value <= 0) {
-                alert('Должен быть хотя бы один игрок');
-
-                return;
-            }
-
-            if (rolesHandler.roles.value.length === 0) {
-                alert('Должна быть хотя бы одна роль');
-
-                return;
-            }
-
-            try {
-                const response = await fetch('https://localhost:7001/api/game/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(settings)
-                });
-
-                const gameInstance = await response.json();
-
-                window.dispatchEvent(new CustomEvent('onGameStarted', {
-                    detail: gameInstance
-                }));
-
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-
-            } catch (error) {
-                alert('Ошибка при запуске игры:', error);
-            }
+    async function startGame() {
+        if (timeDelay.value <= 0) {
+            alert('Время на ходы должно быть больше 0');
+            return;
         }
 
-        return {
-            timeDelay,
-            startGame,
-            ...globalHandler,
-            ...rolesHandler,
-            ...playerHandler
-        };
+        if (playerHandler.playersCount?.value <= 0) {
+            alert('Должен быть хотя бы один игрок');
+            return;
+        }
+
+        if (rolesHandler.roles?.value.length === 0) {
+            alert('Должна быть хотя бы одна роль');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://localhost:7001/api/game/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(settings.value)
+            });
+
+            const gameInstance = await response.json();
+
+            window.dispatchEvent(new CustomEvent('onGameStarted', {
+                detail: gameInstance
+            }));
+
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+        } catch (error) {
+            alert('Ошибка при запуске игры:', error);
+        }
     }
-}).mount('#settingsModal');
+
+    return {
+        timeDelay,
+        startGame,
+        setDefaultSettings,
+        ...globalHandler,
+        ...rolesHandler,
+        ...playerHandler
+    };
+}
+
+export { globalHandle, rolesHandle, playersHandle, gameSettingsHandle }

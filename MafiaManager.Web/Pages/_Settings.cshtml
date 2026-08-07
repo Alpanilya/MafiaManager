@@ -1,7 +1,4 @@
-﻿@using System.Text.Json
-@model MafiaManager.Core.Entities.GameSettings
-
-<div id="settingsModal"
+﻿<div id="settingsModal"
      class="modal fade"
      data-bs-backdrop="static" 
      data-bs-keyboard="false"
@@ -15,7 +12,7 @@
 
             <div class="modal-body">
                 <div class="mb-3">
-                    <label  for="playerCount" 
+                    <label for="playerCount"
                             class="form-label fw-semibold">
                             Количество игроков:
                     </label>
@@ -23,10 +20,10 @@
                     <input type="number" 
                             class="form-control bg-body-tertiary border-secondary"
                             id="playerCount"
-                            v-model.number="playersCount"
+                            v-model.number="gameSettings.playersCount"
                             min="0" 
                             max="100"
-                            @@input="playersCount = Math.min(100, playersCount)"
+                            @@input="gameSettings.playersCount = Math.min(100, gameSettings.playersCount)"
                             required>
                 </div>
 
@@ -39,8 +36,8 @@
                             class="form-control bg-body-tertiary border-secondary" 
                             id="timeDelay" 
                             min="0"
-                            v-model.number="timeDelay"
-                            @@input ="timeDelay = Math.min(3600, timeDelay)"
+                            v-model.number="gameSettings.timeDelay"
+                            @@input="gameSettings.timeDelay = Math.min(3600, gameSettings.timeDelay)"
                             required>
                 </div>
 
@@ -52,21 +49,12 @@
             <div class="modal-footer border-secondary overflow-y-auto">
                 <button type="button"
                         class="btn btn-danger w-100 fw-bold py-2" 
-                        @@click="startGame()">
+                        @@click="gameSettings.startGame()">
                     Начать игру
                 </button>
             </div>
         </div>
     </div>
 </div>
-
-<script type="module">
-    @{
-        var settingsJson = JsonSerializer.Serialize(Model);
-    }
-
-    window.gameSettings = @Html.Raw(settingsJson);
-
-</script>
 
 <script type="module" src="~/js/settings.js"></script>

@@ -21,7 +21,8 @@ namespace MafiaManager.Api.Controllers
             {
                 Roles = DefaultRoles,
                 TimeDelay = 60,
-                Players = []
+                Players = [],
+                DefaultRole = DefaultRoles[3],
             };
 
             return this.Ok(gameSettings);

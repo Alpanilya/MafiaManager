@@ -10,5 +10,7 @@ namespace MafiaManager.Core.Entities
         public IList<IRole> Roles { get; set; }
 
         public int TimeDelay { get; set; }
+
+        public IRole DefaultRole { get; set; }
     }
 }

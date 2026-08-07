@@ -1,30 +1,29 @@
 ﻿<div class="row row-cols-2 row-cols-sm-3 g-3" id="playersGrid">
-
-    <div v-for="player in players"
-         :key="getId(player)"
+    <div v-for="player in gameSettings.players"
+         :key="getEntityId(player)"
          class="col">
         <div class="card bg-dark text-white border-2 text-center p-2 h-100 d-flex flex-column justify-content-between"
-             :style="{ borderColor: getRoleColor(player.Role) }">
+             :style="{ borderColor: gameSettings.getRoleColor(gameSettings.getPlayerRole(player)) }">
+                
+            <div class="display-6 fw-bold"> {{ getEntityId(player) }}</div>
 
-            <div class="display-6 fw-bold"> {{ getId(player) }}</div>
-
-            <small class="text-uppercase mt-1">{{player.Name}}</small>
+            <small class="text-uppercase mt-1">{{ getEntityName(player) }}</small>
             <button class="btn btn-secondary btn-sm dropdown-toggle"
                     type="button"
                     data-bs-toggle="dropdown"
                     aria-expanded="false">
-                    {{ getRoleName(player.Role) }}
+                {{ getEntityName(gameSettings.getPlayerRole(player)) }}
             </button>
             <ul class="dropdown-menu dropdown-menu-dark">
                 <li v-for="role in roles">
                     <a class="dropdown-item" href="#" @@click="changePlayerRole(player, role)">
-                        {{ getRoleName(role) }}>
+                        {{ getEntityName(role) }}
                     </a>
                 </li>
             </ul>
         </div>
     </div>
 </div>
-<div v-if="playersCount === 0" class="col-12 fw-bold text-secondary text-center p-3">
+<div v-if="gameSettings.playersCount === 0" class="col-12 fw-bold text-secondary text-center p-3">
     <small>Укажите кол-во игроков</small>
 </div>

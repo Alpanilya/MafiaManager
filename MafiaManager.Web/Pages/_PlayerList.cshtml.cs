@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MafiaManager.Web.Pages.Shared
+namespace MafiaManager.Web.Pages
 {
     public class _PlayerListModel : PageModel
     {
