@@ -14,8 +14,8 @@ namespace MafiaManager.Api.Controllers
                 new() { ID = 4, Name = "Мирный", Color = "#8D99AE" },
             ];
 
-        [HttpGet("getGameSettings")]
-        public IActionResult GetGameSettings()
+        [HttpGet("settings")]
+        public IActionResult GetSettings()
         {
             var gameSettings = new GameSettings()
             {
