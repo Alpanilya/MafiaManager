@@ -1,6 +1,6 @@
 <script setup>
 import { toRef, defineProps } from 'vue'
-import { roleService } from '@/services/settingsModalService'
+import { roleService } from '@/services/settingsService'
 
 const props = defineProps({
   gameSettings: Object,

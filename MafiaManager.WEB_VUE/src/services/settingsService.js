@@ -164,8 +164,9 @@ export function roleService(settingsRef) {
   }
 }
 
-export function initSettingsModal(isOpen) {
+export function settingsService(isOpen, emit) {
   const settings = ref({})
+  const isLoading = ref(false)
 
   watch(
     isOpen,
@@ -178,10 +179,38 @@ export function initSettingsModal(isOpen) {
   )
 
   async function getDefaultSettings() {
-    settings.value = await loadSettings()
+    isLoading.value = true
+    try {
+      settings.value = await loadSettings()
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function startGame() {
+    const currentSettings = settings.value
+
+    if (currentSettings.timeDelay <= 0) {
+      alert('Время на ходы должно быть больше 0')
+      return
+    }
+
+    if (currentSettings.players.length <= 0) {
+      alert('Должен быть хотя бы один игрок')
+      return
+    }
+
+    if (currentSettings.roles?.length === 0) {
+      alert('Должна быть хотя бы одна роль')
+      return
+    }
+
+    emit('created', settings.value)
   }
 
   return {
     settings,
+    isLoading,
+    startGame,
   }
 }

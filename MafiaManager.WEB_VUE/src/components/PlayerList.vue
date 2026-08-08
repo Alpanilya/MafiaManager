@@ -1,6 +1,6 @@
 <script setup>
 import { toRef, defineProps } from 'vue'
-import { playerService } from '@/services/settingsModalService'
+import { playerService } from '@/services/settingsService'
 
 const props = defineProps({
   gameSettings: Object,

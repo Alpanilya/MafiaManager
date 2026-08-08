@@ -1,6 +1,6 @@
 <script setup>
 import { toRef, defineProps, defineModel } from 'vue'
-import { initSettingsModal } from '@/services/settingsModalService'
+import { settingsService } from '@/services/settingsService'
 
 import RolesList from '@/components/RolesList.vue'
 import PlayerList from '@/components/PlayerList.vue'
@@ -9,9 +9,11 @@ const props = defineProps({
   isOpen: Boolean,
 })
 
+const emit = defineEmits(['created'])
+
 const playersCount = defineModel('playersCount', { type: Number, default: 0 })
 
-const { settings } = initSettingsModal(toRef(props, 'isOpen'))
+const { settings, startGame } = settingsService(toRef(props, 'isOpen'), emit)
 </script>
 
 <template>
@@ -64,7 +66,9 @@ const { settings } = initSettingsModal(toRef(props, 'isOpen'))
         </div>
 
         <div class="modal-footer border-secondary overflow-y-auto">
-          <button type="button" class="btn btn-danger w-100 fw-bold py-2">Начать игру</button>
+          <button type="button" class="btn btn-danger w-100 fw-bold py-2" @click="startGame">
+            Начать игру
+          </button>
         </div>
       </div>
     </div>
