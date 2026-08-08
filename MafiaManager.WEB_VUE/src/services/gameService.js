@@ -1,8 +1,11 @@
 import { ref } from 'vue'
 import { entityService } from '@/services/entityService'
+import { playerService, roleService } from '@/services/settingsService'
 import { createGame } from '@/api/game'
 
 export function gameService() {
+  const service = entityService()
+  const { getRoleColor, getPlayerRole } = playerService()
   const inEdit = ref(true)
   const game = ref({})
 
@@ -20,6 +23,8 @@ export function gameService() {
     game,
     inEdit,
     onGameCreated,
-    ...entityService,
+    getRoleColor,
+    getPlayerRole,
+    ...service,
   }
 }
