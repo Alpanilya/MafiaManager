@@ -8,14 +8,16 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фаз игры
     /// </summary>
-    public class GameStateStrategy
+    public class GameStateStrategy(IGameLogService logService)
     {
+        private readonly IGameLogService _logService = logService ?? throw new ArgumentNullException(nameof(logService));
+
         private readonly Dictionary<GameState, IGameStateService> _services = new()
         {
             { GameState.Day, new DayGameStateService() },
-            { GameState.Day | GameState.Vote, new DayVoteGameStateService() },
+            //{ GameState.Day | GameState.Vote, new DayVoteGameStateService() },
             { GameState.Night, new NightGameStateService() },
-            { GameState.Night | GameState.Vote, new NightVoteGameStateService() }
+            //{ GameState.Night | GameState.Vote, new NightVoteGameStateService() }
         };
 
         public GameState ProcessPhase(IGame game)

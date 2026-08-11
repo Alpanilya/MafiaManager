@@ -1,6 +1,10 @@
 ﻿using MafiaManager.Core.Entities;
+using MafiaManager.Core.Interfaces;
+using MafiaManager.Core.Services;
+using MafiaManager.Shared.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace MafiaManager.Api.Controllers
 {
@@ -29,7 +33,7 @@ namespace MafiaManager.Api.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult Create([FromBody] GameSettings gameSettings)
+        public IActionResult Create([FromBody] GameSettings gameSettings, [FromServices] IGameLogService logService)
         {
             if (gameSettings == null)
                 return this.BadRequest("Game settings cannot be null.");
@@ -38,9 +42,32 @@ namespace MafiaManager.Api.Controllers
             {
                 GameSettings = gameSettings,
                 Players = gameSettings.Players,
+                Day = 1,
             };
 
+            logService.Log(game, "Игра началась!");
+
             return this.Ok(game);
+        }
+
+        [HttpGet("playerStates")]
+        public IActionResult PlayerStates()
+        {
+            return this.Ok(Enum.GetValues<PlayerState>());
+        }
+
+        [HttpGet("gameStates")]
+        public IActionResult GameStates()
+        {
+            return this.Ok(Enum.GetValues<GameState>());
+        }
+
+        [HttpPost("getNextPhase")]
+        public IActionResult GetNextPhase([FromBody] Game game, [FromServices] GameStateStrategy gameStateStrategy)
+        {
+            var gameState = gameStateStrategy.ProcessPhase(game);
+
+            return this.Ok(gameState);
         }
     }
 }

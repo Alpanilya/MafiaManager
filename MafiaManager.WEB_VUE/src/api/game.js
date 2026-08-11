@@ -1,5 +1,5 @@
-export async function loadSettings() {
-  const response = await fetch('/api/game/settings')
+async function getResponse(url, request) {
+  const response = await fetch(url, request)
 
   if (!response.ok) {
     throw new Error(`Ошибка загрузки настроек: ${response.statusText}`)
@@ -8,18 +8,34 @@ export async function loadSettings() {
   return await response.json()
 }
 
+export async function loadSettings() {
+  return await getResponse('/api/game/settings')
+}
+
 export async function createGame(settings) {
-  const response = await fetch('/api/game/create', {
+  return await getResponse('/api/game/create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(settings),
   })
+}
 
-  if (!response.ok) {
-    throw new Error(`Ошибка создания игры: ${response.statusText}`)
-  }
+export async function getPlayerStates() {
+  return await getResponse('/api/game/playerStates')
+}
 
-  return await response.json()
+export async function getGameStates() {
+  return await getResponse('/api/game/gameStates')
+}
+
+export async function getNextPhase(game) {
+  return await getResponse('/api/game/getNextPhase', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(game),
+  })
 }

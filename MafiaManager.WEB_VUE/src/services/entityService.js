@@ -32,11 +32,39 @@ export function entityService() {
   }
 
   function getId(item) {
-    return item?.ID ?? item?.id
+    return getProperty(item, 'ID', 'id')
   }
 
   function getName(item, defaultName = null) {
-    return item?.Name ?? item?.name ?? defaultName
+    return getProperty(item, 'Name', 'name') ?? defaultName
+  }
+
+  function formatDate(date, format) {
+    if (!date) return
+
+    const defaultFormat = {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }
+
+    const actualFormat = { ...defaultFormat, ...format }
+
+    return new Date(date).toLocaleTimeString('ru-RU', actualFormat)
+  }
+
+  function getPropertyName(object, ...propertyNames) {
+    if (!object) return
+
+    return propertyNames.find((propertyName) => propertyName in object)
+  }
+
+  function getProperty(object, ...propertyNames) {
+    if (!object) return
+
+    const propertyName = getPropertyName(object, ...propertyNames)
+
+    return object[propertyName]
   }
 
   return {
@@ -44,5 +72,8 @@ export function entityService() {
     getLastID,
     getId,
     getName,
+    formatDate,
+    getPropertyName,
+    getProperty,
   }
 }

@@ -12,7 +12,7 @@ namespace MafiaManager.Core.Services
     {
         public GameState Process(IGame game)
         {
-            return GameState.Night | GameState.Vote;
+            return GameState.Day;
         }
     }
 }

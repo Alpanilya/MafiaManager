@@ -9,8 +9,7 @@ namespace MafiaManager.Shared.Enums
     [Obsolete("Возможно понадобится уход от Flags. После финальной версии удалить аттрибут")]
     public enum GameState
     {
-        Day = 1, // День
-        Night = 2, // Ночь
-        Vote = 4 // Голосование
+        Day = 0, // День
+        Night = 1, // Ночь
     }
 }

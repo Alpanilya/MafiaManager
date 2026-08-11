@@ -1,17 +1,20 @@
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { loadSettings } from '@/api/game'
 import { entityService } from '@/services/entityService'
 
 export function playerService(settingsRef, playersCountRef) {
   const service = entityService()
   const { roles, defaultRole } = roleService(settingsRef)
-  const players = ref([])
-  const playersCount = playersCountRef
+  const players = computed(() => {
+    return service.getProperty(settingsRef.value, 'Players', 'players') ?? []
+  })
 
   if (playersCountRef) {
     watch(
       playersCountRef,
       (newVal) => {
+        if (!players.value) return
+
         const diff = newVal - players.value.length
 
         if (diff > 0) {
@@ -24,30 +27,6 @@ export function playerService(settingsRef, playersCountRef) {
     )
   }
 
-  watch(
-    settingsRef,
-    (newVal) => {
-      if (newVal) {
-        initRefs(settingsRef.value)
-      }
-    },
-    { immediate: true },
-  )
-
-  function initRefs(settings) {
-    if (!settings) {
-      return
-    }
-
-    const rawPlayers = settings.players ?? settings.Players
-
-    players.value = rawPlayers ?? []
-
-    if (playersCount) {
-      playersCount.value = players.value.length
-    }
-  }
-
   function getRoleColor(player) {
     const role = getPlayerRole(player)
 
@@ -55,7 +34,7 @@ export function playerService(settingsRef, playersCountRef) {
   }
 
   function getPlayerRole(player) {
-    return player.role ?? player.Role ?? null
+    return service.getProperty(player, 'Role', 'role')
   }
 
   function appendPlayers(count) {
@@ -97,12 +76,17 @@ export function playerService(settingsRef, playersCountRef) {
     player.role = role
   }
 
+  function getPlayerState(player) {
+    return service.getProperty(player, 'State', 'state')
+  }
+
   return {
     players,
     roles,
     getRoleColor,
     getPlayerRole,
     changePlayerRole,
+    getPlayerState,
     ...service,
   }
 }
@@ -110,20 +94,14 @@ export function playerService(settingsRef, playersCountRef) {
 export function roleService(settingsRef) {
   const service = entityService()
   const defaultColor = '#ff0000'
-  const roles = ref([])
   const newRoleName = ref('')
   const newRoleColor = ref(defaultColor)
-  const defaultRole = ref('')
-
-  watch(
-    settingsRef,
-    (newVal) => {
-      if (newVal) {
-        initRefs(newVal)
-      }
-    },
-    { immediate: true },
-  )
+  const defaultRole = computed(() => {
+    return service.getProperty(settingsRef.value, 'DefaultRole', 'defaultRole')
+  })
+  const roles = computed(() => {
+    return service.getProperty(settingsRef.value, 'Roles', 'roles') ?? []
+  })
 
   function appendCustomRole() {
     const name = newRoleName.value.trim()
@@ -140,18 +118,6 @@ export function roleService(settingsRef) {
     roles.value.push(role)
 
     newRoleName.value = ''
-  }
-
-  function initRefs(settings) {
-    if (!settings) {
-      return
-    }
-
-    const rawRoles = settings.roles ?? settings.Roles
-
-    roles.value = rawRoles ?? []
-
-    defaultRole.value = settings.defaultRole ?? settings.DefaultRole ?? null
   }
 
   return {
