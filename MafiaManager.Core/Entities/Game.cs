@@ -1,35 +1,31 @@
-﻿using MafiaManager.Core.Interfaces;
-using MafiaManager.Shared.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MafiaManager.Core.Entities
 {
-    public class Game : Entity, IGame
+    public class Game : Entity<Guid>
     {
-        public IGameSettings GameSettings { get; set; }
+        public GameSettings GameSettings { get; set; }
 
         public GameState GameState { get; set; }
 
-        public IList<IPlayer> Players { get; set; }
+        public IList<GameLogMessage> Log { get; } = [];
 
-        public int Day { get; set; }
+        public DateTime DateLastConnection { get; set; }
 
-        private readonly List<IGameLogMessage> _log = [];
+        public int? CurrentActiveRole { get; set; }
 
-        public IReadOnlyCollection<IGameLogMessage> Log { get; }
+        public int? CurrentActivePlayer { get; set; }
 
-        public Game()
-        {
-            this.Log = this._log.AsReadOnly();
-        }
+        public IList<GameAction> Actions { get; } = [];
 
         public void AddLogMessage(string message)
         {
-            this._log.Add(new GameLogMessage
+            this.Log.Add(new GameLogMessage
             {
                 Date = DateTime.Now,
-                GameState = this.GameState,
+                Phase = this.GameState.Phase,
+                Day = this.GameState.Day,
                 Message = message
             });
         }

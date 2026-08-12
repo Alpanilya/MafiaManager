@@ -2,5 +2,4 @@
   <Project Path="MafiaManager.Api/MafiaManager.Api.csproj" />
   <Project Path="MafiaManager.Core/MafiaManager.Core.csproj" />
   <Project Path="MafiaManager.Shared/MafiaManager.Shared.csproj" />
-  <Project Path="MafiaManager.Web/MafiaManager.Web.csproj" />
 </Solution>

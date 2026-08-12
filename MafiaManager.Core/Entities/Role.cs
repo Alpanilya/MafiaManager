@@ -1,9 +1,11 @@
-﻿using MafiaManager.Core.Interfaces;
+﻿using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Entities
 {
-    public class Role : Entity, IRole
+    public class Role : Entity<int>
     {
         public string Color { get; set; }
+
+        public GamePhase Phase { get; set; }
     }
 }

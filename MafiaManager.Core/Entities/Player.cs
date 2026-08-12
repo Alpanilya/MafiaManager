@@ -1,11 +1,10 @@
-﻿using MafiaManager.Core.Interfaces;
-using MafiaManager.Shared.Enums;
+﻿using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Entities
 {
-    public class Player : Entity, IPlayer
+    public class Player : Entity<int>
     {
-        public IRole Role { get; set; }
+        public int Role { get; set; }
 
         public PlayerState State { get; set; }
     }

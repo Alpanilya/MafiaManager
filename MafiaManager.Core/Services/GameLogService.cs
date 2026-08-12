@@ -1,15 +1,24 @@
-﻿using MafiaManager.Core.Interfaces;
+﻿using MafiaManager.Core.Entities;
+using MafiaManager.Core.Interfaces;
 
 namespace MafiaManager.Core.Services
 {
-    public class GameLogService : IGameLogService
+    public class GameLogService(INotificationLogService notificationService, IGameActionMessage actionMessage) : IGameLogService
     {
-        public void Log(IGame game, string message)
+        private readonly INotificationLogService _notificationService = notificationService;
+
+        private readonly IGameActionMessage _gameActionMessage = actionMessage;
+
+        public void Log(Game game, GameAction action)
         {
-            if (game == null || string.IsNullOrWhiteSpace(message))
+            if (game == null || action == null)
                 return;
 
+            string message = this._gameActionMessage.Format(game, action);
+
             game.AddLogMessage(message);
+
+            this._notificationService?.NotifyAsync(game.ID.ToString(), message);
         }
     }
 }

@@ -1,4 +1,9 @@
+using MafiaManager.Api.Hubs;
+using MafiaManager.Api.Services;
+using MafiaManager.Core.Entities;
 using MafiaManager.Core.Interfaces;
+using MafiaManager.Core.Options;
+using MafiaManager.Core.Repositories;
 using MafiaManager.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,11 +26,22 @@ namespace MafiaManager.Api
 
             services
                 .AddDistributedMemoryCache()
-                .AddHttpContextAccessor();
+                .AddHttpContextAccessor()
+                .AddSignalR();
 
             services
-                .AddScoped<IGameLogService, GameLogService>()
-                .AddScoped<GameStateStrategy>();
+                .Configure<RepositorySettings>(builder.Configuration.GetSection("RepositorySettings"));
+
+            services
+                .AddSingleton<INotificationLogService, NotificationLogServiceService>()
+                .AddSingleton<INotificationEntityUpdateService<Game>, NotificationGameUpdateService>()
+                .AddSingleton<IRepository<Game>, GameRepository>()
+                .AddSingleton<IGameActionMessage, GameActionMessageStrategy>()
+                .AddSingleton<IGameLogService, GameLogService>()
+                .AddSingleton<GameStateStrategy>();
+
+            services
+                .AddHostedService<RepositoryPollingService>();
 
             var app = builder
                 .Build();
@@ -38,6 +54,9 @@ namespace MafiaManager.Api
 
             app
                 .MapControllers();
+
+            app
+                .MapHub<GameHub>("/notificationRelay");
 
             app
                 .Run();

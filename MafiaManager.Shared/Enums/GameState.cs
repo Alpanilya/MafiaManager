@@ -1,15 +1,14 @@
-﻿using System;
-
-namespace MafiaManager.Shared.Enums
+﻿namespace MafiaManager.Shared.Enums
 {
     /// <summary>
     /// Фаза игры
     /// </summary>
-    [Flags]
-    [Obsolete("Возможно понадобится уход от Flags. После финальной версии удалить аттрибут")]
-    public enum GameState
+    public enum GamePhase
     {
         Day = 0, // День
         Night = 1, // Ночь
+        Vote = 2, // Голосование
+        Meeting = 3, // Знакомство
+        GameOver = 4, // Знакомство
     }
 }

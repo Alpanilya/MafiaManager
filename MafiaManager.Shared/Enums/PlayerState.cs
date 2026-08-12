@@ -1,12 +1,12 @@
 ﻿namespace MafiaManager.Shared.Enums
 {
     /// <summary>
-    /// Состояние игрока
+    /// Состояния игрока
     /// </summary>
     public enum PlayerState
     {
         Alive, // Живой
         Dead, // Мертвый
-        Protected // Защищенный
+        Nominated, // Номинированный
     }
 }

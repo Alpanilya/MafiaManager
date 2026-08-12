@@ -1,4 +1,5 @@
-﻿using MafiaManager.Core.Interfaces;
+﻿using MafiaManager.Core.Entities;
+using MafiaManager.Core.Interfaces;
 using MafiaManager.Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -12,22 +13,42 @@ namespace MafiaManager.Core.Services
     {
         private readonly IGameLogService _logService = logService ?? throw new ArgumentNullException(nameof(logService));
 
-        private readonly Dictionary<GameState, IGameStateService> _services = new()
+        private readonly Dictionary<GamePhase, IGameStateService> _services = new()
         {
-            { GameState.Day, new DayGameStateService() },
-            //{ GameState.Day | GameState.Vote, new DayVoteGameStateService() },
-            { GameState.Night, new NightGameStateService() },
-            //{ GameState.Night | GameState.Vote, new NightVoteGameStateService() }
+            { GamePhase.Day, new DayGameStateService() },
+            { GamePhase.Night, new NightGameStateService() },
+            { GamePhase.Vote, new VoteGameStateService() },
+            { GamePhase.Meeting, new MeetingGameStateService() },
         };
 
-        public GameState ProcessPhase(IGame game)
+        public Game ProcessPhase(StateContext stateContext)
         {
-            game = game ?? throw new ArgumentNullException(nameof(game));
+            Game game = stateContext.Game ?? 
+                throw new ArgumentNullException(nameof(stateContext.Game));
 
-            if (!this._services.TryGetValue(game.GameState, out IGameStateService service))
-                throw new ArgumentOutOfRangeException(nameof(GameState));
+            GameState gameState = game.GameState;
 
-            return service.Process(game);
+            if (gameState.Phase == GamePhase.GameOver)
+                throw new InvalidOperationException("Игра была завершена");
+
+            GamePhase prevPhase = gameState.Phase;
+
+            if (!this._services.TryGetValue(game.GameState.Phase, out IGameStateService service))
+                throw new InvalidOperationException($"Не найден сервис для фазы {gameState.Phase}");
+
+            game = service.Process(stateContext, this._logService);
+
+            service.TryGameComplete(game, logService);
+
+            if (gameState.Phase == GamePhase.GameOver)
+                return game;
+
+            GamePhase newPhase = game.GameState.Phase;
+
+            if (newPhase != prevPhase && this._services.TryGetValue(newPhase, out service))
+                service.EnterPhase(game, logService);
+
+            return game;
         }
     }
 }

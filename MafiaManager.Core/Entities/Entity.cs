@@ -1,13 +1,62 @@
-﻿using MafiaManager.Core.Interfaces;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System;
+using System.Linq;
+using MafiaManager.Core.Utils;
 
 namespace MafiaManager.Core.Entities
 {
-    public class Entity : IEntity, INotifyPropertyChanged
+    public class PlayerCollection : EntityCollection<Player, int>
     {
-        public int ID { get; set; }
+        public PlayerCollection() : base() { }
+
+        public IEnumerable<Player> GetPlayersByRole(int roleId) => roleId < 0
+            ? throw new ArgumentOutOfRangeException(nameof(roleId))
+            : this.Where(p => p.Role == roleId);
+
+        public IEnumerable<Player> GetPlayersAliveByRole(int roleId) => roleId < 0
+            ? throw new ArgumentOutOfRangeException(nameof(roleId))
+            : this.GetPlayersByRole(roleId).Where(p => p.State != Shared.Enums.PlayerState.Dead);
+
+        public IEnumerable<Player> GetPlayersAlive() => 
+            this.Where(p => p.State != Shared.Enums.PlayerState.Dead);
+
+        public bool IsMafia(Player player) =>
+            Constants.MAFIA_ROLES.Contains(player.Role);
+
+        public bool IsSheriff(Player player) =>
+            Constants.SHERIFF_ROLE.ID == player.Role;
+
+        public Player GetLastAlive()
+        {
+            for (int i = this.Count - 1; i >= 0; i--)
+            {
+                if (this[i].State != Shared.Enums.PlayerState.Dead)
+                    return this[i];
+            }
+
+            return null;
+        }
+    }
+
+    public class EntityCollection<TEntity, TKey> : KeyedCollection<TKey, TEntity> 
+        where TEntity : Entity<TKey>
+    {
+        // Сразу вызываем создание словаря параметром dictionaryCreationThreshold = 0
+        public EntityCollection() : base(null, 0) { }
+
+        protected override TKey GetKeyForItem(TEntity item) => 
+            item.ID;
+
+        public TEntity ElementAt(int index) => 
+            this[index];
+    }
+
+    public class Entity<TKey> : INotifyPropertyChanged
+    {
+        public TKey ID { get; set; }
 
         public string Name { get; set; }
 

@@ -1,0 +1,70 @@
+<svg
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 400 400"
+class="w-100 h-auto rounded-3 shadow-sm"
+>
+  <defs>
+    <linearGradient id="nightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0b132b"></stop>
+      <stop offset="100%" stop-color="#1c2541"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Night Background -->
+  <rect width="400" height="400" fill="url(#nightSky)" rx="16"></rect>
+
+  <!-- Large Sparkle Stars -->
+  <path
+    d="M 200 120 Q 200 135 215 135 Q 200 135 200 150 Q 200 135 185 135 Q 200 135 200 120 Z"
+    fill="#FFFDE7"
+  ></path>
+  <path
+    d="M 320 220 Q 320 230 330 230 Q 320 230 320 240 Q 320 230 310 230 Q 320 230 320 220 Z"
+    fill="#FFFFFF"
+  ></path>
+  <path
+    d="M 80 250 Q 80 260 90 260 Q 80 260 80 270 Q 80 260 70 260 Q 80 260 80 250 Z"
+    fill="#FFFDE7"
+  ></path>
+  <path
+    d="M 270 90 Q 270 96 276 96 Q 270 96 270 102 Q 270 96 264 96 Q 270 96 270 90 Z"
+    fill="#FFFFFF"
+  ></path>
+
+  <!-- 5-Point Stars -->
+  <polygon
+    points="150,190 153,197 160,197 155,201 157,208 150,203 143,208 145,201 140,197 147,197"
+    fill="#FFFDE7"
+  ></polygon>
+  <polygon
+    points="280,290 282,295 287,295 283,298 285,303 280,299 275,303 277,298 273,295 278,295"
+    fill="#FFFDE7"
+  ></polygon>
+  <polygon
+    points="230,250 232,254 236,254 233,256 234,260 230,257 226,260 227,256 224,254 228,254"
+    fill="#FFFFFF"
+  ></polygon>
+  <polygon
+    points="60,160 61,163 65,163 62,165 63,169 60,167 57,169 58,165 55,163 59,163"
+    fill="#FFFFFF"
+  ></polygon>
+
+  <!-- Field of Starlight Dots -->
+  <circle cx="50" cy="80" r="1.5" fill="#FFFFFF" opacity="0.8"></circle>
+  <circle cx="90" cy="60" r="2" fill="#FFFDE7" opacity="0.9"></circle>
+  <circle cx="160" cy="70" r="1.5" fill="#FFFFFF" opacity="0.7"></circle>
+  <circle cx="220" cy="50" r="2" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="310" cy="60" r="1.5" fill="#FFFDE7" opacity="0.8"></circle>
+  <circle cx="360" cy="90" r="2" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="40" cy="210" r="1.5" fill="#FFFDE7" opacity="0.8"></circle>
+  <circle cx="100" cy="180" r="2" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="180" cy="180" r="1.5" fill="#FFFFFF" opacity="0.7"></circle>
+  <circle cx="250" cy="170" r="2" fill="#FFFDE7" opacity="0.8"></circle>
+  <circle cx="360" cy="190" r="1.5" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="70" cy="320" r="2" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="120" cy="290" r="1.5" fill="#FFFDE7" opacity="0.8"></circle>
+  <circle cx="170" cy="330" r="2" fill="#FFFFFF" opacity="0.9"></circle>
+  <circle cx="210" cy="300" r="1.5" fill="#FFFFFF" opacity="0.7"></circle>
+  <circle cx="250" cy="340" r="2" fill="#FFFDE7" opacity="0.8"></circle>
+  <circle cx="330" cy="350" r="1.5" fill="#FFFFFF" opacity="0.9"></circle>
+</svg>

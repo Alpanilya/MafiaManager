@@ -1,0 +1,266 @@
+﻿using MafiaManager.Core.Interfaces;
+using MafiaManager.Core.Utils;
+using MafiaManager.Shared.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MafiaManager.Core.Entities
+{
+    public abstract class GameActionMessage : IGameActionMessage
+    {
+        public abstract string Format(Game game, GameAction action);
+
+        protected virtual string ResolveActor(Game game, GameAction action)
+        {
+            string result = null;
+
+            if (action.PlayerID.HasValue)
+            {
+                Player player = game.GameSettings.Players[action.PlayerID.Value];
+
+                result = player.Name;
+            }
+            else if (action.RoleID.HasValue)
+            {
+                Role role = game.GameSettings.Roles[action.RoleID.Value];
+
+                result = role.Name;
+            }
+
+            return $"{result}";
+        }
+
+        protected virtual string ResolveTarget(Game game, GameAction action)
+        {
+            string result = null;
+
+            if (action.TargetID.HasValue)
+            {
+                Player player = game.GameSettings.Players[action.TargetID.Value];
+
+                result = player.Name;
+            }
+
+            return result;
+        }
+    }
+
+    public class GameActionSkip : GameActionMessage
+    {
+        private const string NON_EXIST_PLAYER = "<b>{0}</b> выбрал(а) несуществующего игрока с ID <b>{1}</b>";
+
+        private const string SKIP_ACTION = "<b>{0}></b> не сделал(а) свой выбор!";
+
+        private const string SKIP_VOTE = "<b>{0}</b> пропускает голосование!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            if (action.Phase == GamePhase.Night)
+            {
+                bool emptyResult = action.Result == ActionResult.Fail;
+
+                if (emptyResult)
+                    return string.Format(NON_EXIST_PLAYER, actor, action.TargetID);
+
+                return string.Format(SKIP_ACTION, actor);
+            }
+
+            return string.Format(SKIP_VOTE, actor);
+        }
+    }
+
+    public class GameActionCheck : GameActionMessage
+    {
+        private const string START_CHECK = "<b>{0}</b> начинает проверку <b>{1}</b>. <b>{1}</b><b>{2}</b><b>{3}</b>!";
+
+        private const string SEPARATOR = " ";
+
+        private const string NO = " НЕ ";
+
+        public override string Format(Game game, GameAction action)
+        {
+            if (!action.Result.HasValue)
+                throw new InvalidOperationException(nameof(action.Result));
+
+            bool isGF = game.GameSettings.Roles[action.RoleID.Value]?.ID == Constants.GOD_FATHER_ROLE.ID;
+
+            string checkedFor = isGF ? Constants.SHERIFF_ROLE.Name : Constants.MAFIA_ROLE.Name;
+
+            string status = action.Result == ActionResult.Success ? SEPARATOR : NO;
+
+            string actor = this.ResolveActor(game, action);
+
+            string target = this.ResolveTarget(game, action);
+
+            return string.Format(START_CHECK, actor, target, status, checkedFor);
+        }
+    }
+
+    public class GameActionNominate : GameActionMessage
+    {
+        private const string NOMINATE = "<b>{0}</b> номинирует <b>{1}</b> на выбывание!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            string target = this.ResolveTarget(game, action);
+
+            return string.Format(NOMINATE, actor, target);
+        }
+    }
+
+    public class GameActionKill : GameActionMessage
+    {
+        private const string NIGHT_KILL = "<b>{0}</b> убивает <b>{1}</b>!";
+
+        private const string VOTE_KILL = "По результату голосования выбывает игрок <b>{0}</b>!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            StringBuilder sb = new();
+
+            string actor = this.ResolveActor(game, action);
+
+            string target = this.ResolveTarget(game, action);
+
+            if (action.Phase == GamePhase.Night)
+            {
+                sb.AppendFormat(NIGHT_KILL, actor, target);
+            }
+            else
+            {
+                sb.AppendFormat(VOTE_KILL, target);
+            }
+
+            PlayerCollection players = game.GameSettings.Players;
+
+            Player player = players[action.TargetID.Value];
+
+            var role = game.GameSettings.Roles[player.Role];
+
+            sb.Append($" <b>{target}</b> <b>{role.Name}</b>!");
+
+            return sb.ToString();
+        }
+    }
+
+    public class GameActionGameOver : GameActionMessage
+    {
+        private const string GAME_OVER = "Игра завершена победой <b>{0}</b>!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            bool isMafiaWin = action.RoleID == Constants.MAFIA_ROLE.ID;
+
+            string role = isMafiaWin ? "мафии" : "мирных жителей";
+
+            return string.Format(GAME_OVER, role);
+        }
+    }
+
+    public class GameActionPhaseChanged : GameActionMessage
+    {
+        private const string NIGHT_WAKEUP = "Город засыпает! Просыпается <b>{0}</b>";
+
+        public override string Format(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            if (action.Phase == GamePhase.Night)
+            {
+                return string.Format(NIGHT_WAKEUP, actor);
+            }
+
+            return null;
+        }
+    }
+
+    public class GameActionHandoff : GameActionMessage
+    {
+        private const string NIGHT_HANDOFF = "<b>{0}</b> засыпает! Просыпается <b>{1}!</b>";
+
+        private const string NIGHT_OVER = "Все роли сделали ход!";
+
+        private const string DAY_OVER = "Номинирование завершено!";
+
+        private const string DAY_HANDOFF = "<b>{1}</b> завершил речь. Свою речь говорит: <b>{0}</b>!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            string target = this.ResolveTarget(game, action);
+
+            if (action.Phase == GamePhase.Night)
+            {
+                if (!action.TargetID.HasValue)
+                    return NIGHT_OVER;
+
+                return string.Format(NIGHT_HANDOFF, actor, target);
+            }
+
+            if (!action.TargetID.HasValue)
+                return DAY_OVER;
+
+            return string.Format(DAY_HANDOFF, actor, target);
+        }
+
+        protected override string ResolveTarget(Game game, GameAction action)
+        {
+            string result = null;
+
+            if (action.TargetID.HasValue)
+            {
+                if (action.Phase == GamePhase.Night)
+                {
+                    Role role = game.GameSettings.Roles[action.TargetID.Value];
+
+                    result = role.Name;
+                }
+                else
+                {
+                    Player player = game.GameSettings.Players[action.TargetID.Value];
+
+                    result = player.Name;
+                }
+            }
+
+            return result;
+        }
+    }
+
+    public class GameActionVote : GameActionMessage
+    {
+        private const string START_VOTE = "Все кандидаты выбраны. Голосование начинается!1";
+
+        public override string Format(Game game, GameAction action) =>
+            START_VOTE;
+    }
+
+    public class GameActionMessageStrategy : IGameActionMessage
+    {
+        private static readonly Dictionary<ActionType, IGameActionMessage> _actions = new()
+        {
+            [ActionType.Skip] = new GameActionSkip(),
+            [ActionType.Check] = new GameActionCheck(),
+            [ActionType.Nominate] = new GameActionNominate(),
+            [ActionType.Kill] = new GameActionKill(),
+            [ActionType.PhaseChanged] = new GameActionPhaseChanged(),
+            [ActionType.GameOver] = new GameActionGameOver(),
+            [ActionType.Handoff] = new GameActionHandoff(),
+            [ActionType.Vote] = new GameActionVote(),
+        };
+
+        public string Format(Game game, GameAction action)
+        {
+            if (!_actions.TryGetValue(action.Type, out IGameActionMessage actionMessage))
+                throw new InvalidOperationException(nameof(action.Type));
+
+            return actionMessage.Format(game, action);
+        }
+    }
+}

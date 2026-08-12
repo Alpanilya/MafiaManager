@@ -1,0 +1,133 @@
+/* Базовая карточка */
+.card.player-card {
+  position: relative;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background-color: var(--role-color);
+  color: oklch(from var(--role-color) calc((0.6 - l) * 10000) 0 0);
+}
+
+.player-card:hover,
+.player-card:focus-within,
+.player-card.is-selected {
+  z-index: 10;
+}
+
+/* Ховер состояния */
+.player-card:not(.is-dead):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 5px 2px var(--role-color, #ffffff);
+}
+
+.player-card:not(.is-dead):active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.player-card.is-selected {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px 3px var(--role-color, #ffffff);
+}
+
+.player-card.is-dead {
+  opacity: 0.5;
+}
+
+.player-card .card-header,
+.player-card .card-footer {
+  background-color: rgba(0, 0, 0, 0.40);
+  border-color: rgba(0, 0, 0, 0.1);      
+  color: inherit;
+}
+
+.btn.btn-contrast {
+  color: inherit;
+  background-color: none;
+  user-select: none;
+}
+
+.btn.btn-contrast:hover, 
+.btn.btn-contrast:focus,
+.btn.btn-contrast:active {
+  background-color: none;
+  border: none;
+  color: inherit;
+}
+
+.btn.btn-text-contrast{
+  --bs-btn-bg: #E63946;
+  --bs-btn-active-color: oklch(from var(--bs-btn-bg) calc((0.6 - l) * 10000) 0 0);
+  --bs-btn-hover-color: oklch(from var(--bs-btn-bg) calc((0.6 - l) * 10000) 0 0);
+  color: oklch(from var(--bs-btn-bg) calc((0.6 - l) * 10000) 0 0);
+}
+
+/* Выпадающее меню: добавляем расчет контраста для фона меню */
+.dropdown-menu.dropdown-menu-contrast {
+  background-color: var(--role-color);
+  color: oklch(from var(--role-color) calc((0.6 - l) * 10000) 0 0);
+  border: none;
+  user-select: none;
+}
+
+/* Пункты выпадающего списка */
+.dropdown-menu-contrast .dropdown-item-contrast {
+  color: inherit;
+}
+
+.dropdown-menu-contrast .dropdown-item-contrast:hover,
+.dropdown-menu-contrast .dropdown-item-contrast:focus {
+  background-color: transparent;
+  border:none;
+  color: inherit;
+  font-weight: 700;
+}
+
+/* Карточка роли */
+.card.role-card {
+  background-color: var(--role-color);
+  color: oklch(from var(--role-color) calc((0.6 - l) * 10000) 0 0);
+  border: none;
+  user-select: none;
+}
+
+.card.role-card.is-selected {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 0 5px 2px var(--role-color, #ffffff);
+}
+
+.card.role-card .btn {
+  color: inherit;
+}
+
+/* Карточка фазы */
+.card.card-state {
+  background-color: var(--state-color, #ffffff);
+  background-image: var(--state-bg, none);
+  background-size: cover;
+  background-position: var(--state-pos, none);
+  background-repeat: no-repeat;
+  color: oklch(from var(--state-color, #ffffff) calc((0.5 - l) * 10000) 0 0);
+  border: none;
+  user-select: none;
+}
+
+.card.card-state .card-body {
+  background-color: transparent;
+  color: inherit;
+}
+
+.card.card-state .badge {
+  background-color: transparent;
+  --bs-border-color: currentColor;
+  color: inherit;
+}
+
+.badge.badge-stats {
+  background-color: var(--stats-color, #ffffff);
+  color: oklch(from var(--stats-color, #ffffff) calc((0.5 - l) * 10000) 0 0);
+}
+
+.card.role-card .btn {
+  color: inherit;
+}
