@@ -19,15 +19,21 @@ namespace MafiaManager.Core.Entities
 
         public GameActionCollection Actions { get; } = [];
 
-        public void AddLogMessage(string message)
+        public GameLogMessage AddLogMessage(string message, GameAction action)
         {
-            this.Log.Add(new GameLogMessage
+            GameLogMessage log = new()
             {
+                ID = Guid.NewGuid(),
                 Date = DateTime.Now,
                 Phase = this.GameState.Phase,
                 Day = this.GameState.Day,
-                Message = message
-            });
+                Message = message,
+                OwnerID = action?.ID
+            };
+
+            this.Log.Add(log);
+
+            return log;
         }
     }
 }

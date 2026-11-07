@@ -1,47 +1,21 @@
 ﻿using MafiaManager.Shared.Enums;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MafiaManager.Core.Entities
 {
     public class GameActionCollection : EntityCollection<GameAction, Guid>
     {
-        public int? Cursor { get; set; }
-
-        protected override void InsertItem(int index, GameAction item)
-        {
-            base.InsertItem(index, item);
-
-            this.Cursor = index;
-        }
-
-        protected override void RemoveItem(int index)
-        {
-            GameAction gameAction = this[index];
-
-            base.RemoveItem(index);
-
-            this.Cursor--;
-        }
-
-        protected override void SetItem(int index, GameAction item)
-        {
-            base.SetItem(index, item);
-
-            this.Cursor = index;
-        }
-
         public GameAction[] GetActions(GameState state, params ActionType[] actionType) =>
             [.. this.Where(a => actionType.Contains(a.Type) && a.Day == state.Day && a.Phase == state.Phase) ];
 
-        public GameAction GetActions(GameState state, int? playerID, params ActionType[] actionType)
+        public GameAction GetAction(GameState state, int? playerID, params ActionType[] actionType)
         {
             var collection = this.GetActions(state, actionType);
 
             return playerID.HasValue
-                ? collection.FirstOrDefault(p => p.PlayerID == playerID)
-                : collection.FirstOrDefault();
+                ? collection.SingleOrDefault(p => p.PlayerID == playerID)
+                : collection.SingleOrDefault();
         }
     }
 

@@ -18,5 +18,7 @@ namespace MafiaManager.Core.Entities
         public int Day { get; set; }
 
         public string Message { get; set; }
+
+        public Guid? OwnerID { get; set; }
     }
 }

@@ -86,7 +86,7 @@ namespace MafiaManager.Core.Services
                         .SetRole(Constants.MAFIA_ROLE.ID));
             }
 
-            logService.Log(game, gameAction);
+            this._gameLogService.Log(game, gameAction);
         }
 
         protected GameAction CreateAndAddAction(Game game, GameActionBuilder builder)

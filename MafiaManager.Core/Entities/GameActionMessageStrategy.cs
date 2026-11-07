@@ -183,7 +183,7 @@ namespace MafiaManager.Core.Entities
     {
         private const string NIGHT_HANDOFF = "<b>{0}</b> засыпает! Просыпается <b>{1}!</b>";
 
-        private const string NIGHT_OVER = "Все роли сделали ход!";
+        private const string NIGHT_OVER = "Все роли сделали свой выбор!";
 
         private const string DAY_OVER = "Номинирование завершено!";
 
@@ -245,7 +245,7 @@ namespace MafiaManager.Core.Entities
 
     public class GameActionVote : GameActionMessage
     {
-        private const string START_VOTE = "Все кандидаты выбраны. Голосование начинается!1";
+        private const string START_VOTE = "Все кандидаты выбраны. Голосование начинается!";
 
         public override string Format(Game game, GameAction action) =>
             START_VOTE;

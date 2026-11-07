@@ -172,7 +172,13 @@ export const useGameStore = defineStore('game', () => {
   connection.on('OnNewLogMessage', (newMessage) => {
     if (!game.value.log) game.value.log = []
 
-    game.value.log.push(newMessage)
+    gameLog.value.push(newMessage)
+  })
+
+  connection.on('OnLogUpdated', (updated) => {
+    const i = gameLog.value.findIndex((l) => l.id === updated.id)
+
+    if (i !== -1) gameLog.value[i] = updated
   })
 
   connection.on('OnGameUpdated', (newGame) => {

@@ -37,9 +37,9 @@ namespace MafiaManager.Core.Services
             if (!this._services.TryGetValue(game.GameState.Phase, out IGameStateService service))
                 throw new InvalidOperationException($"Не найден сервис для фазы {gameState.Phase}");
 
-            game = service.Process(stateContext, this._logService);
+            game = service.Process(stateContext);
 
-            service.TryGameComplete(game, logService);
+            service.TryGameComplete(game);
 
             if (gameState.Phase == GamePhase.GameOver)
                 return game;
@@ -47,7 +47,7 @@ namespace MafiaManager.Core.Services
             GamePhase newPhase = game.GameState.Phase;
 
             if (newPhase != prevPhase && this._services.TryGetValue(newPhase, out service))
-                service.EnterPhase(game, logService);
+                service.EnterPhase(game);
 
             return game;
         }
@@ -66,7 +66,7 @@ namespace MafiaManager.Core.Services
             if (!this._services.TryGetValue(game.GameState.Phase, out IGameStateService service))
                 throw new InvalidOperationException($"Не найден сервис для фазы {gameState.Phase}");
 
-            game = service.ProcessSwitch(stateContext, this._logService);
+            game = service.ProcessSwitch(stateContext);
 
             return game;
         }

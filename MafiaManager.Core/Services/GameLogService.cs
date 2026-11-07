@@ -1,5 +1,7 @@
 ﻿using MafiaManager.Core.Entities;
 using MafiaManager.Core.Interfaces;
+using System;
+using System.Linq;
 
 namespace MafiaManager.Core.Services
 {
@@ -16,9 +18,30 @@ namespace MafiaManager.Core.Services
 
             string message = this._gameActionMessage.Format(game, action);
 
-            game.AddLogMessage(message);
+            GameLogMessage log = game.AddLogMessage(message, action);
 
-            this._notificationService?.NotifyAsync(game.ID.ToString(), message);
+            this._notificationService?.NotifyAsync(game.ID.ToString(), log);
+        }
+
+        public void Rebuild(Game game, GameAction cursor)
+        {
+            ArgumentNullException.ThrowIfNull(cursor);
+
+            GameActionCollection actions = game.Actions;
+
+            int index = actions.IndexOf(cursor);
+
+            if (index < 0)
+                throw new ArgumentException($"Действие {cursor.ID} не найдено в логе игры", nameof(cursor));
+
+            GameLogMessage log = game.Log.FirstOrDefault(l => l.OwnerID == cursor.ID) ?? 
+                throw new InvalidOperationException($"Сообщение лога для действия {cursor.ID} не найдено");
+
+            string message = this._gameActionMessage.Format(game, cursor);
+
+            log.Message = message;
+
+            this._notificationService?.NotifyUpdateAsync(game.ID.ToString(), log);
         }
     }
 }

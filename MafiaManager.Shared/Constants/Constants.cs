@@ -6,7 +6,9 @@ namespace MafiaManager.Shared.Constants
     {
         public static readonly TimeSpan DEFAULT_THRESHOLD = TimeSpan.FromHours(2);
 
-        public const string ON_LOGMESSAGE_EVENT = "OnNewLogMessage";
+        public const string ON_NEW_LOG_EVENT = "OnNewLogMessage";
+
+        public const string ON_LOG_UPDATED_EVENT = "OnLogUpdated";
 
         public const string ON_GAMEUPDATED_EVENT = "OnGameUpdated";
 

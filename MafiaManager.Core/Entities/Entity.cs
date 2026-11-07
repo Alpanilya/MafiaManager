@@ -1,10 +1,11 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using MafiaManager.Core.Utils;
+using MafiaManager.Shared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System;
+using System.ComponentModel;
 using System.Linq;
-using MafiaManager.Core.Utils;
+using System.Runtime.CompilerServices;
 
 namespace MafiaManager.Core.Entities
 {
@@ -18,10 +19,10 @@ namespace MafiaManager.Core.Entities
 
         public IEnumerable<Player> GetPlayersAliveByRole(int roleId) => roleId < 0
             ? throw new ArgumentOutOfRangeException(nameof(roleId))
-            : this.GetPlayersByRole(roleId).Where(p => p.State != Shared.Enums.PlayerState.Dead);
+            : this.GetPlayersByRole(roleId).Where(p => p.State != PlayerState.Dead);
 
         public IEnumerable<Player> GetPlayersAlive() => 
-            this.Where(p => p.State != Shared.Enums.PlayerState.Dead);
+            this.Where(p => p.State != PlayerState.Dead);
 
         public bool IsMafia(Player player) =>
             Constants.MAFIA_ROLES.Contains(player.Role);
@@ -33,7 +34,7 @@ namespace MafiaManager.Core.Entities
         {
             for (int i = this.Count - 1; i >= 0; i--)
             {
-                if (this[i].State != Shared.Enums.PlayerState.Dead)
+                if (this[i].State != PlayerState.Dead)
                     return this[i];
             }
 
@@ -66,6 +67,16 @@ namespace MafiaManager.Core.Entities
             return this[index];
         }
     }
+
+    public static class EntityCollectionExtensions
+    {
+        public static TEntity GetOrDefault<TEntity, TKey>(this EntityCollection<TEntity, TKey> collection, TKey? key)
+            where TKey : struct
+            where TEntity : Entity<TKey> =>
+            key.HasValue && collection.Contains(key.Value)
+                ? collection[key.Value]
+                : null;
+    }   
 
     public class Entity<TKey> : INotifyPropertyChanged
     {

@@ -28,31 +28,38 @@ namespace MafiaManager.Core.Services
 
             PlayerCollection players = game.GameSettings.Players;
 
-            Player player = players[game.CurrentActivePlayer.Value];
+            Player player = players.GetOrDefault(game.CurrentActivePlayer);
 
             GameState gameState = game.GameState;
 
             GameActionCollection actions = game.Actions;
 
-            GameAction gameAction = actions.GetActions(gameState, player.ID, ActionType.Nominate);
+            GameAction gameAction = actions.GetAction(gameState, player.ID, ActionType.Nominate, ActionType.Skip);
 
-            Player targetPlayer = players[nominatedPlayer.Value];
+            Player targetPlayer = players.GetOrDefault(nominatedPlayer);
 
-            if (targetPlayer.State == PlayerState.Dead)
-                throw new InvalidOperationException($"<b>{targetPlayer.Name}</b> уже мертв и не может быть номинирован!");
+            if (targetPlayer?.State == PlayerState.Dead)
+                throw new InvalidOperationException($"<b>{targetPlayer.Name}</b> мертв и не может быть номинирован!");
 
             if (gameAction != null)
             {
                 if (gameAction.TargetID.HasValue)
                 {
-                    Player undoPlayer = players[gameAction.TargetID.Value];
+                    Player undoPlayer = players.GetOrDefault(gameAction.TargetID.Value);
 
                     undoPlayer.State = PlayerState.Alive;
                 }
 
-                gameAction.TargetID = targetPlayer.ID;
+                if (gameAction.TargetID.HasValue)
+                {
+                    gameAction.TargetID = targetPlayer.ID;
 
-                targetPlayer.State = PlayerState.Nominated;
+                    targetPlayer.State = PlayerState.Nominated;
+                }
+
+                this._gameLogService.Rebuild(game, gameAction);
+
+                game.CurrentActivePlayer = this.GetNextActiveID(game);
             }
             else
             {
@@ -75,12 +82,13 @@ namespace MafiaManager.Core.Services
                     targetPlayer.State = PlayerState.Nominated;
                 }
 
-                game.CurrentActivePlayer = this.GetNextActiveID(game);
-
                 gameAction = this.CreateAndAddAction(game, gameActionBuilder);
+
+                this._gameLogService.Log(game, gameAction);
+
+                game.CurrentActivePlayer = this.GetNextActiveIDWithLog(game);
             }
 
-            this._gameLogService.Log(game, gameAction);
 
             players.ResetSelection();
 
@@ -108,47 +116,45 @@ namespace MafiaManager.Core.Services
             return false;
         }
 
-        protected override int? GetNextActiveID(Game game)
+        private int? GetNextActiveIDWithLog(Game game)
         {
-            PlayerCollection players = game.GameSettings.Players;
-
-            Player player = game.CurrentActivePlayer.HasValue 
-                ? players[game.CurrentActivePlayer.Value] 
-                : null; 
-
-            int index = player is null 
-                ? 0 
-                : players.IndexOf(player);
-
             GameActionBuilder builder = GameActionBuilder.Create(game)
                 .SetPlayer(game.CurrentActivePlayer)
                 .SetActionType(ActionType.Handoff);
 
-            try
+            int? nextID = this.GetNextActiveID(game);
+
+            builder.SetTarget(nextID);
+
+            GameAction gameAction = this.CreateAndAddAction(game, builder);
+
+            this._gameLogService.Log(game, gameAction);
+
+            return nextID;
+        }
+
+        protected override int? GetNextActiveID(Game game)
+        {
+            PlayerCollection players = game.GameSettings.Players;
+
+            Player[] playersAlive = [.. players.GetPlayersAlive()];
+
+            GameActionCollection gameActions = game.Actions;
+
+            // Переключаемся на игрока, который еще не совершал номинации
+            for (int i = 0; i < playersAlive.Length; i++)
             {
-                for (int i = index; i < players.Count; i++)
-                {
-                    Player currentPlayer = players.ElementAt(i);
+                Player currentPlayer = playersAlive[i];
 
-                    if (currentPlayer.ID == game.CurrentActivePlayer)
-                        continue;
+                var actions = gameActions.GetAction(game.GameState, currentPlayer.ID, ActionType.Nominate, ActionType.Skip);
 
-                    if (currentPlayer.State != PlayerState.Dead)
-                    {
-                        builder.SetTarget(currentPlayer.ID);
+                if (actions != null)
+                    continue;
 
-                        return currentPlayer.ID;
-                    }
-                }
-
-                return null;
+                return currentPlayer.ID;
             }
-            finally
-            {
-                GameAction gameAction = this.CreateAndAddAction(game, builder);
 
-                this._gameLogService.Log(game, gameAction);
-            }
+            return null;
         }
 
         public override void EnterPhase(Game game)
@@ -157,7 +163,7 @@ namespace MafiaManager.Core.Services
 
             players.ResetSelection();
 
-            game.CurrentActivePlayer = this.GetNextActiveID(game);
+            game.CurrentActivePlayer = this.GetNextActiveIDWithLog(game);
         }
 
         public override Game ProcessSwitch(StateContext context)
@@ -178,7 +184,7 @@ namespace MafiaManager.Core.Services
 
             Player[] playersAlive = [.. players.GetPlayersAlive()];
 
-            Player currentPlayer = players[game.CurrentActivePlayer.Value];
+            Player currentPlayer = players.GetOrDefault(game.CurrentActivePlayer);
 
             // Действия номинаций и пропуска ходов
             GameAction[] nominatedActions = actions.GetActions(gameState, ActionType.Nominate, ActionType.Skip);
@@ -203,7 +209,7 @@ namespace MafiaManager.Core.Services
                 // Выбор на игрока, которого номинировал игрок
                 if (action != null && action.TargetID.HasValue)
                 {
-                    Player player = players[action.TargetID.Value];
+                    Player player = players.GetOrDefault(action.TargetID);
 
                     player.IsSelected = true;
                 }
