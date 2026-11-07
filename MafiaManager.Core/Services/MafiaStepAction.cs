@@ -4,9 +4,9 @@ using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Services
 {
-    public class MafiaStepAction : StepAction
+    public class MafiaStepAction(IGameLogService gameLogService) : StepAction(gameLogService)
     {
-        protected override void ExecuteAction(Game game, int? nominatedPlayer, IGameLogService logService)
+        protected override void ExecuteAction(Game game, int? nominatedPlayer)
         {
             GameAction gameAction = GameActionBuilder.Create(game)
                 .SetRole(game.CurrentActiveRole)
@@ -20,7 +20,7 @@ namespace MafiaManager.Core.Services
 
             player.State = PlayerState.Dead;
 
-            logService.Log(game, gameAction);
+            this._gameLogService.Log(game, gameAction);
         }
     }
 }

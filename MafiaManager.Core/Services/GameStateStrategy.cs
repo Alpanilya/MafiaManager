@@ -15,10 +15,10 @@ namespace MafiaManager.Core.Services
 
         private readonly Dictionary<GamePhase, IGameStateService> _services = new()
         {
-            { GamePhase.Day, new DayGameStateService() },
-            { GamePhase.Night, new NightGameStateService() },
-            { GamePhase.Vote, new VoteGameStateService() },
-            { GamePhase.Meeting, new MeetingGameStateService() },
+            { GamePhase.Day, new DayGameStateService(logService) },
+            { GamePhase.Night, new NightGameStateService(logService) },
+            { GamePhase.Vote, new VoteGameStateService(logService) },
+            { GamePhase.Meeting, new MeetingGameStateService(logService) },
         };
 
         public Game ProcessPhase(StateContext stateContext)

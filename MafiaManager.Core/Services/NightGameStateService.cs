@@ -11,16 +11,16 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фазы ночного голосования
     /// </summary>
-    public class NightGameStateService : GameStateService
+    public class NightGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
         private readonly Dictionary<int, IStepAction> _stepActions = new()
         {
-            [Constants.MAFIA_ROLE.ID] = new MafiaStepAction(),
-            [Constants.GOD_FATHER_ROLE.ID] = new GodFatherStepAction(),
-            [Constants.SHERIFF_ROLE.ID] = new SheriffStepAction()
+            [Constants.MAFIA_ROLE.ID] = new MafiaStepAction(gameLogService),
+            [Constants.GOD_FATHER_ROLE.ID] = new GodFatherStepAction(gameLogService),
+            [Constants.SHERIFF_ROLE.ID] = new SheriffStepAction(gameLogService)
         };
 
-        public override Game Process(StateContext context, IGameLogService logService)
+        public override Game Process(StateContext context)
         {
             if (context is not NominateContext nominateContext)
                 throw new ArgumentException($"Ожидался {nameof(NominateContext)}", nameof(context));
@@ -32,18 +32,18 @@ namespace MafiaManager.Core.Services
             int? nominatedPlayer = nominateContext.NomitantedPlayer;
 
             if (this._stepActions.TryGetValue(game.CurrentActiveRole.Value, out IStepAction stepAction))
-                stepAction.Process(game, nominatedPlayer, logService);
+                stepAction.Process(game, nominatedPlayer);
 
-            game.CurrentActiveRole = this.GetNextActiveID(game, logService);
+            game.CurrentActiveRole = this.GetNextActiveID(game);
 
             players.ResetSelection();
 
-            this.TryEndPhase(game, logService);
+            this.TryEndPhase(game);
 
             return game;
         }
 
-        protected override bool TryEndPhase(Game game, IGameLogService logService)
+        protected override bool TryEndPhase(Game game)
         {
             if (!game.CurrentActiveRole.HasValue)
             {
@@ -58,7 +58,7 @@ namespace MafiaManager.Core.Services
             return false;
         }
 
-        protected override int? GetNextActiveID(Game game, IGameLogService logService)
+        protected override int? GetNextActiveID(Game game)
         {
             var roles = game.GameSettings.Roles;
 
@@ -95,14 +95,14 @@ namespace MafiaManager.Core.Services
             {
                 GameAction gameAction = this.CreateAndAddAction(game, gameActionBuilder);
 
-                logService.Log(game, gameAction);
+                this._gameLogService.Log(game, gameAction);
             }
 
             return null;
         }
 
  
-        public override void EnterPhase(Game game, IGameLogService logService)
+        public override void EnterPhase(Game game)
         {
             PlayerCollection players = game.GameSettings.Players;
 
@@ -120,7 +120,7 @@ namespace MafiaManager.Core.Services
                         .SetRole(game.CurrentActiveRole)
                         .SetActionType(ActionType.PhaseChanged));
 
-                    logService?.Log(game, gameAction);
+                    this._gameLogService?.Log(game, gameAction);
 
                     return;
                 }

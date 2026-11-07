@@ -7,18 +7,18 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фазы знакомства
     /// </summary>
-    public class MeetingGameStateService : GameStateService
+    public class MeetingGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context, IGameLogService logService)
+        public override Game Process(StateContext context)
         {
             Game game = context.Game;
 
-            this.TryEndPhase(game, logService);
+            this.TryEndPhase(game);
 
             return game;
         }
 
-        protected override bool TryEndPhase(Game game, IGameLogService logService)
+        protected override bool TryEndPhase(Game game)
         {
             game.GameState.Phase = GamePhase.Night;
 
@@ -27,7 +27,7 @@ namespace MafiaManager.Core.Services
             return true;
         }
 
-        public override void EnterPhase(Game game, IGameLogService logService)
+        public override void EnterPhase(Game game)
         {
             game.GameSettings.Players.ResetSelection();
 

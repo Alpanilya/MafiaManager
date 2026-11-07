@@ -4,9 +4,9 @@ using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Services
 {
-    public class GodFatherStepAction: StepAction
+    public class GodFatherStepAction(IGameLogService gameLogService) : StepAction(gameLogService)
     {
-        protected override void ExecuteAction(Game game, int? nominatedPlayer, IGameLogService logService)
+        protected override void ExecuteAction(Game game, int? nominatedPlayer)
         {
             PlayerCollection players = game.GameSettings.Players;
 
@@ -23,7 +23,7 @@ namespace MafiaManager.Core.Services
 
             game.Actions.Add(gameAction);
 
-            logService.Log(game, gameAction);
+            this._gameLogService.Log(game, gameAction);
         }
     }
 }

@@ -9,9 +9,9 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фазы наминации на выбывание
     /// </summary>
-    public class DayGameStateService : GameStateService
+    public class DayGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context, IGameLogService logService)
+        public override Game Process(StateContext context)
         {
             if (context is not NominateContext nominateContext)
                 throw new ArgumentException($"Ожидался {nameof(NominateContext)}", nameof(context));
@@ -20,7 +20,7 @@ namespace MafiaManager.Core.Services
 
             int? nominatedPlayer = nominateContext.NomitantedPlayer;
 
-            if (this.TryEndPhase(game, logService))
+            if (this.TryEndPhase(game))
                 return game;
 
             if (!game.CurrentActivePlayer.HasValue)
@@ -75,21 +75,21 @@ namespace MafiaManager.Core.Services
                     targetPlayer.State = PlayerState.Nominated;
                 }
 
-                game.CurrentActivePlayer = this.GetNextActiveID(game, logService);
+                game.CurrentActivePlayer = this.GetNextActiveID(game);
 
                 gameAction = this.CreateAndAddAction(game, gameActionBuilder);
             }
 
-            logService.Log(game, gameAction);
+            this._gameLogService.Log(game, gameAction);
 
             players.ResetSelection();
 
-            this.TryEndPhase(game, logService);
+            this.TryEndPhase(game);
 
             return game;
         }
 
-        protected override bool TryEndPhase(Game game, IGameLogService logService)
+        protected override bool TryEndPhase(Game game)
         {
             if (game.CurrentActivePlayer == null)
             {
@@ -98,7 +98,7 @@ namespace MafiaManager.Core.Services
                 GameAction gameAction = this.CreateAndAddAction(game, GameActionBuilder.Create(game)
                     .SetActionType(ActionType.Vote));
 
-                logService?.Log(game, gameAction);
+                this._gameLogService.Log(game, gameAction);
 
                 game.CurrentActivePlayer = null;
 
@@ -108,7 +108,7 @@ namespace MafiaManager.Core.Services
             return false;
         }
 
-        protected override int? GetNextActiveID(Game game, IGameLogService logService)
+        protected override int? GetNextActiveID(Game game)
         {
             PlayerCollection players = game.GameSettings.Players;
 
@@ -147,20 +147,20 @@ namespace MafiaManager.Core.Services
             {
                 GameAction gameAction = this.CreateAndAddAction(game, builder);
 
-                logService.Log(game, gameAction);
+                this._gameLogService.Log(game, gameAction);
             }
         }
 
-        public override void EnterPhase(Game game, IGameLogService logService)
+        public override void EnterPhase(Game game)
         {
             PlayerCollection players = game.GameSettings.Players;
 
             players.ResetSelection();
 
-            game.CurrentActivePlayer = this.GetNextActiveID(game, logService);
+            game.CurrentActivePlayer = this.GetNextActiveID(game);
         }
 
-        public override Game ProcessSwitch(StateContext context, IGameLogService logService)
+        public override Game ProcessSwitch(StateContext context)
         {
             if (context is not SwitchContext switchContext)
                 throw new ArgumentException($"Ожидался {nameof(SwitchContext)}", nameof(context));

@@ -10,9 +10,9 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фазы голосования на исключение
     /// </summary>
-    public class VoteGameStateService : GameStateService
+    public class VoteGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context, IGameLogService logService)
+        public override Game Process(StateContext context)
         {
             if (context is not VoteContext voteContext)
                 throw new ArgumentException($"Ожидался {nameof(VoteContext)}", nameof(context));
@@ -30,9 +30,9 @@ namespace MafiaManager.Core.Services
 
             player.State = PlayerState.Dead;
 
-            logService.Log(game, gameAction);
+            this._gameLogService.Log(game, gameAction);
 
-            this.TryEndPhase(game, logService);
+            this.TryEndPhase(game);
 
             return game;
         }
@@ -56,7 +56,7 @@ namespace MafiaManager.Core.Services
             return players[pairs[0].Key];
         }
 
-        protected override bool TryEndPhase(Game game, IGameLogService logService)
+        protected override bool TryEndPhase(Game game)
         {
             PlayerCollection players = game.GameSettings.Players;
 
@@ -75,7 +75,7 @@ namespace MafiaManager.Core.Services
         }
 
 
-        public override void EnterPhase(Game game, IGameLogService logService)
+        public override void EnterPhase(Game game)
         {
             game.GameSettings.Players.ResetSelection();
 

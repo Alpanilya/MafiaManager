@@ -2,6 +2,7 @@
 using MafiaManager.Core.Interfaces;
 using MafiaManager.Core.Utils;
 using MafiaManager.Shared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,14 +28,17 @@ namespace MafiaManager.Core.Services
         public int Cursor { get; set; }
     }
 
-    public abstract class GameStateService : IGameStateService
+    public abstract class GameStateService(IGameLogService gameLogService) : IGameStateService
     {
-        public abstract Game Process(StateContext context, IGameLogService logService);
+        protected readonly IGameLogService _gameLogService = gameLogService ??
+            throw new ArgumentNullException(nameof(gameLogService));
+
+        public abstract Game Process(StateContext context);
 
         /// <summary>
         /// Выбор следующего активного участника
         /// </summary>
-        protected virtual int? GetNextActiveID(Game game, IGameLogService logService) =>
+        protected virtual int? GetNextActiveID(Game game) =>
             null;
 
         /// <summary>
@@ -42,11 +46,11 @@ namespace MafiaManager.Core.Services
         /// </summary>
         /// <param name="game">Представление игры (<see cref="IGame"/>)</param>
         /// <param name="logService">Сервис логирования(<see cref="IGame"/>)</param>
-        protected abstract bool TryEndPhase(Game game, IGameLogService logService);
+        protected abstract bool TryEndPhase(Game game);
 
-        public abstract void EnterPhase(Game game, IGameLogService logService);
+        public abstract void EnterPhase(Game game);
 
-        public void TryGameComplete(Game game, IGameLogService logService)
+        public void TryGameComplete(Game game)
         {
             PlayerCollection players = game.GameSettings.Players;
 
@@ -94,7 +98,7 @@ namespace MafiaManager.Core.Services
             return gameAction;
         }
 
-        public virtual Game ProcessSwitch(StateContext context, IGameLogService logService) => 
+        public virtual Game ProcessSwitch(StateContext context) => 
             context?.Game;
     }
 }

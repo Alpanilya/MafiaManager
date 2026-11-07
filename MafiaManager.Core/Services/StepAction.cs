@@ -1,12 +1,16 @@
 ﻿using MafiaManager.Core.Entities;
 using MafiaManager.Core.Interfaces;
 using MafiaManager.Shared.Enums;
+using System;
 
 namespace MafiaManager.Core.Services
 {
-    public abstract class StepAction : IStepAction
+    public abstract class StepAction(IGameLogService gameLogService) : IStepAction
     {
-        public Game Process(Game game, int? nominatedPlayer, IGameLogService logService)
+        protected readonly IGameLogService _gameLogService = gameLogService ?? 
+            throw new ArgumentNullException(nameof(gameLogService));
+
+        public Game Process(Game game, int? nominatedPlayer)
         {
             GameAction gameAction = null;
 
@@ -35,7 +39,7 @@ namespace MafiaManager.Core.Services
                     return game;
                 }
 
-                this.ExecuteAction(game, nominatedPlayer, logService);
+                this.ExecuteAction(game, nominatedPlayer);
 
                 return game;
             }
@@ -44,10 +48,10 @@ namespace MafiaManager.Core.Services
                 if (gameAction != null)
                     game.Actions.Add(gameAction);
 
-                logService?.Log(game, gameAction);
+                this._gameLogService?.Log(game, gameAction);
             }
         }
 
-        protected abstract void ExecuteAction(Game game, int? nominatedPlayer, IGameLogService logService);
+        protected abstract void ExecuteAction(Game game, int? nominatedPlayer);
     }
 }
