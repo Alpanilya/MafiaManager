@@ -22,6 +22,11 @@ namespace MafiaManager.Core.Services
         public IReadOnlyDictionary<int, int?> Votes { get; set; }
     }
 
+    public class SwitchContext : StateContext
+    {
+        public int Cursor { get; set; }
+    }
+
     public abstract class GameStateService : IGameStateService
     {
         public abstract Game Process(StateContext context, IGameLogService logService);
@@ -88,5 +93,8 @@ namespace MafiaManager.Core.Services
 
             return gameAction;
         }
+
+        public virtual Game ProcessSwitch(StateContext context, IGameLogService logService) => 
+            context?.Game;
     }
 }

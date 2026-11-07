@@ -30,8 +30,8 @@ const {
   resetTimer,
   getGameStats,
   toggleSelectPlayer,
-  isSelectedPlayer,
   submitSelection,
+  changeCursor,
 } = gameStore
 
 const { getRoleColor, getPlayerRole } = roleFunctions()
@@ -153,41 +153,57 @@ watch(
         <div class="card bg-dark">
           <div class="card-header">
             <div class="flex-grow-1 text-white">
-              <div
-                v-if="gameState?.phase === 0 && gameLog.length > 0"
-                class="d-flex align-items-stretch h-100"
-              >
-                <button class="btn d-flex align-items-center text-white">
-                  <arrowLeftIcon />
-                </button>
+              <div class="d-flex justify-content-between align-items-center">
+                <div
+                  v-if="gameState?.phase === 0 && gameLog.length > 0"
+                  class="d-flex align-items-stretch h-100"
+                >
+                  <button
+                    class="btn d-flex align-items-center text-white"
+                    @click="changeCursor(-1)"
+                  >
+                    <arrowLeftIcon />
+                  </button>
 
-                <div class="d-flex flex-column px-2">
-                  <small class="fw-bold">Выставление на голосование</small>
-                  <h5 class="fw-bold mb-0">
-                    Речь игрока: {{ getName(getById(players, сurrentActivePlayer)) }}
-                  </h5>
+                  <div class="d-flex flex-column px-2">
+                    <small class="fw-bold">Выставление на голосование</small>
+                    <h5 class="fw-bold mb-0">
+                      Речь игрока: {{ getName(getById(players, сurrentActivePlayer)) }}
+                    </h5>
+                  </div>
+
+                  <button class="btn d-flex align-items-center text-white" @click="changeCursor(1)">
+                    <arrowRightIcon />
+                  </button>
                 </div>
 
-                <button class="btn d-flex align-items-center">
-                  <arrowRightIcon />
-                </button>
+                <h5 v-if="gameState?.phase === 1" class="mb-0 fw-bold text-white">
+                  Ходит: {{ getName(getById(roles, currentActiveRole)) }}
+                </h5>
+
+                <h5 v-if="gameState?.phase === 3" class="mb-0 fw-bold text-white p-3">
+                  Знакомство с участниками игры
+                </h5>
+
+                <h5 v-if="gameState?.phase === 2" class="mb-0 fw-bold text-white p-3">
+                  Голосование за исключение игрока из игры
+                </h5>
+
+                <h5 v-if="gameState?.phase === 4" class="mb-0 fw-bold text-white p-3">
+                  Игра завершена!
+                </h5>
+
+                <div class="d-flex gap-2">
+                  <span
+                    v-for="group in getGameStats()"
+                    :key="getName(group)"
+                    class="badge badge-stats"
+                    :style="{ '--stats-color': group.color }"
+                  >
+                    {{ getName(group) }}: {{ group.alive }} / {{ group.total }}
+                  </span>
+                </div>
               </div>
-
-              <h5 v-if="gameState?.phase === 1" class="mb-0 fw-bold text-white">
-                Ходит: {{ getName(getById(roles, currentActiveRole)) }}
-              </h5>
-
-              <h5 v-if="gameState?.phase === 3" class="mb-0 fw-bold text-white p-3">
-                Знакомство с участниками игры
-              </h5>
-
-              <h5 v-if="gameState?.phase === 2" class="mb-0 fw-bold text-white p-3">
-                Голосование за исключение игрока из игры
-              </h5>
-
-              <h5 v-if="gameState?.phase === 4" class="mb-0 fw-bold text-white p-3">
-                Игра завершена!
-              </h5>
             </div>
           </div>
 
@@ -201,12 +217,12 @@ watch(
                     '--role-color': getRoleColor(roles, player),
                   }"
                   :class="{
-                    'is-selected': isSelectedPlayer(player),
+                    'is-selected': player.isSelected,
                     'is-dead': player.state === 1,
                   }"
                 >
                   <div
-                    v-if="isSelectedPlayer(player)"
+                    v-if="player.isSelected"
                     class="card-header d-flex justify-content-center fw-bold"
                   >
                     Выбран
@@ -239,17 +255,7 @@ watch(
           </div>
 
           <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex gap-2">
-                <span
-                  v-for="group in getGameStats()"
-                  :key="getName(group)"
-                  class="badge badge-stats"
-                  :style="{ '--stats-color': group.color }"
-                >
-                  {{ getName(group) }}: {{ group.alive }} / {{ group.total }}
-                </span>
-              </div>
+            <div class="d-flex justify-content-end align-items-center">
               <button class="btn btn-success" @click="submitSelection">Далее</button>
             </div>
           </div>

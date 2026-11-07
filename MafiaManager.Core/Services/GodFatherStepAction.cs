@@ -1,6 +1,5 @@
 ﻿using MafiaManager.Core.Entities;
 using MafiaManager.Core.Interfaces;
-using MafiaManager.Core.Utils;
 using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Services
@@ -13,7 +12,7 @@ namespace MafiaManager.Core.Services
 
             Player player = players[nominatedPlayer.Value];
 
-            bool isSheriff = player.Role == Constants.SHERIFF_ROLE.ID;
+            bool isSheriff = players.IsSheriff(player);
 
             GameAction gameAction = GameActionBuilder.Create(game)
                 .SetRole(game.CurrentActiveRole)

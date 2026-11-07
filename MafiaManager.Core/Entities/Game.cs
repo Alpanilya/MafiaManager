@@ -17,7 +17,7 @@ namespace MafiaManager.Core.Entities
 
         public int? CurrentActivePlayer { get; set; }
 
-        public IList<GameAction> Actions { get; } = [];
+        public GameActionCollection Actions { get; } = [];
 
         public void AddLogMessage(string message)
         {

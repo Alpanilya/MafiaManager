@@ -15,7 +15,7 @@ namespace MafiaManager.Core.Services
 
             Player player = players[nominatedPlayer.Value];
 
-            bool isMafia = Constants.MAFIA_ROLES.Contains(player.Role);
+            bool isMafia = players.IsMafia(player);
 
             GameAction gameAction = GameActionBuilder.Create(game)
                 .SetRole(game.CurrentActiveRole)

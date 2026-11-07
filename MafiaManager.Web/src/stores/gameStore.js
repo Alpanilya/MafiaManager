@@ -2,7 +2,12 @@ import * as signalR from '@microsoft/signalr'
 import { defineStore, storeToRefs } from 'pinia'
 import { ref, readonly, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { numberFunctions, entityFunctions, roleFunctions } from '@/services/globalFunctions'
+import {
+  numberFunctions,
+  entityFunctions,
+  roleFunctions,
+  timingFunctions,
+} from '@/services/globalFunctions'
 
 import {
   getPlayerStates,
@@ -114,6 +119,7 @@ export const useGameStore = defineStore('game', () => {
   const { getPlayerRole } = roleFunctions()
   const { getId, getName } = entityFunctions()
   const { increaseValueBy, validateInput } = numberFunctions()
+  const { debounce } = timingFunctions()
 
   const router = useRouter()
   const route = useRoute()
@@ -122,7 +128,6 @@ export const useGameStore = defineStore('game', () => {
   const game = ref({})
   const timeLeft = ref(0)
   const timerRunning = ref(false)
-  const selectedPlayer = ref(null)
   const isVoted = ref(false)
   const voteStarted = ref(false)
   const isSubmitting = ref(false)
@@ -157,6 +162,7 @@ export const useGameStore = defineStore('game', () => {
   const actions = computed(() => {
     return game.value.actions || []
   })
+  const cursor = ref(0)
 
   const connection = new signalR.HubConnectionBuilder()
     .withUrl('/notificationRelay')
@@ -299,20 +305,22 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function toggleSelectPlayer(player) {
-    if (!player) return
+    debouncedToggleSelect(player)
+  }
 
-    const id = getId(player)
+  async function onToggleSelectPlayer(player) {
+    if (isSubmitting.value) return
 
-    const state = player.state
+    isSubmitting.value = true
 
-    if (state === 1) return
-
-    const isSelected = selectedPlayer.value === id
-
-    if (isSelected) {
-      selectedPlayer.value = null
-    } else {
-      selectedPlayer.value = getId(player)
+    try {
+      await connection.invoke('ToggleSelectPlayer', id.value, {
+        playerID: getId(player),
+      })
+    } catch (error) {
+      alert(`${error.message}`)
+    } finally {
+      isSubmitting.value = false
     }
   }
 
@@ -370,25 +378,18 @@ export const useGameStore = defineStore('game', () => {
     return getId(role) === currentActiveRole.value
   }
 
-  function isSelectedPlayer(player) {
-    return selectedPlayer.value === getId(player)
-  }
-
   async function submitSelection() {
     if (isSubmitting.value) return
 
     isSubmitting.value = true
 
     try {
-      await connection.invoke('SubmitAction', id.value, {
-        targetId: selectedPlayer.value,
-      })
+      await connection.invoke('SubmitAction', id.value)
     } catch (error) {
       alert(`${error.message}`)
     } finally {
       isSubmitting.value = false
     }
-    selectedPlayer.value = null
   }
 
   async function submitVoteResult(voteResult) {
@@ -404,6 +405,39 @@ export const useGameStore = defineStore('game', () => {
       isSubmitting.value = false
     }
   }
+
+  async function switchAction() {
+    if (isSubmitting.value) return
+
+    isSubmitting.value = true
+
+    try {
+      await connection.invoke('SwitchGameAction', id.value, {
+        cursor: cursor.value,
+      })
+    } catch (error) {
+      alert(`${error.message}`)
+    } finally {
+      isSubmitting.value = false
+      cursor.value = 0
+    }
+  }
+
+  function addValue(modelRef, value, maxValue) {
+    const result = increaseValueBy(modelRef.value, value)
+
+    modelRef.value = validateInput(result, maxValue, players.value.length * -1)
+  }
+
+  function changeCursor(value) {
+    addValue(cursor, value, actions.value.length - 1)
+
+    debouncedSwitchAction()
+  }
+
+  const debouncedSwitchAction = debounce(switchAction, 200)
+
+  const debouncedToggleSelect = debounce(onToggleSelectPlayer, 200)
 
   return {
     gameState,
@@ -422,11 +456,11 @@ export const useGameStore = defineStore('game', () => {
     resetTimer,
     getGameStats,
     toggleSelectPlayer,
-    isSelectedPlayer,
     submitSelection,
     onGameCreated,
     onVoteCompleted,
     submitVoteResult,
+    changeCursor,
   }
 })
 

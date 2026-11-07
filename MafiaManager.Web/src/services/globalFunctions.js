@@ -45,8 +45,8 @@ export function numberFunctions() {
     return num + inc
   }
 
-  function validateInput(input, max) {
-    if (isNaN(input) || input <= 0) return 0
+  function validateInput(input, max, min = 0) {
+    if (isNaN(input) || input <= min) return min
 
     if (input >= max) return max
 
@@ -156,5 +156,26 @@ export function entityFunctions() {
     getId,
     getName,
     getById,
+  }
+}
+
+export function timingFunctions() {
+  function debounce(fn, delay) {
+    let timeout = null
+
+    return (...args) => {
+      if (timeout !== null) {
+        clearTimeout(timeout)
+      }
+
+      timeout = setTimeout(() => {
+        timeout = null
+        fn(...args)
+      }, delay)
+    }
+  }
+
+  return {
+    debounce,
   }
 }

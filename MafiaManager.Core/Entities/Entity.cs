@@ -39,6 +39,14 @@ namespace MafiaManager.Core.Entities
 
             return null;
         }
+
+        public void ResetSelection()
+        {
+            foreach (Player player in this)
+            {
+                player.IsSelected = false;
+            }
+        }
     }
 
     public class EntityCollection<TEntity, TKey> : KeyedCollection<TKey, TEntity> 
@@ -50,8 +58,13 @@ namespace MafiaManager.Core.Entities
         protected override TKey GetKeyForItem(TEntity item) => 
             item.ID;
 
-        public TEntity ElementAt(int index) => 
-            this[index];
+        public TEntity ElementAt(int index)
+        {
+            if (index < 0 || index > this.Count - 1)
+                return null;
+
+            return this[index];
+        }
     }
 
     public class Entity<TKey> : INotifyPropertyChanged

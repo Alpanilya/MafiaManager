@@ -11,7 +11,6 @@ namespace MafiaManager.Core.Services
     /// <summary>
     /// Сервис обработки фазы ночного голосования
     /// </summary>
-    [Obsolete("Не финальная версия")]
     public class NightGameStateService : GameStateService
     {
         private readonly Dictionary<int, IStepAction> _stepActions = new()
@@ -28,12 +27,16 @@ namespace MafiaManager.Core.Services
 
             Game game = context.Game;
 
+            PlayerCollection players = game.GameSettings.Players;
+
             int? nominatedPlayer = nominateContext.NomitantedPlayer;
 
             if (this._stepActions.TryGetValue(game.CurrentActiveRole.Value, out IStepAction stepAction))
                 stepAction.Process(game, nominatedPlayer, logService);
 
             game.CurrentActiveRole = this.GetNextActiveID(game, logService);
+
+            players.ResetSelection();
 
             this.TryEndPhase(game, logService);
 
@@ -122,6 +125,8 @@ namespace MafiaManager.Core.Services
                     return;
                 }
             }
+
+            players.ResetSelection();
         }
     }
 }

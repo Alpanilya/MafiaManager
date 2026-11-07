@@ -4,6 +4,9 @@ using MafiaManager.Shared.Enums;
 
 namespace MafiaManager.Core.Services
 {
+    /// <summary>
+    /// Сервис обработки фазы знакомства
+    /// </summary>
     public class MeetingGameStateService : GameStateService
     {
         public override Game Process(StateContext context, IGameLogService logService)
@@ -26,6 +29,8 @@ namespace MafiaManager.Core.Services
 
         public override void EnterPhase(Game game, IGameLogService logService)
         {
+            game.GameSettings.Players.ResetSelection();
+
             return;
         }
     }

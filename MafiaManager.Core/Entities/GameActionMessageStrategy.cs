@@ -50,7 +50,7 @@ namespace MafiaManager.Core.Entities
     {
         private const string NON_EXIST_PLAYER = "<b>{0}</b> выбрал(а) несуществующего игрока с ID <b>{1}</b>";
 
-        private const string SKIP_ACTION = "<b>{0}></b> не сделал(а) свой выбор!";
+        private const string SKIP_ACTION = "<b>{0}</b> не сделал(а) свой выбор!";
 
         private const string SKIP_VOTE = "<b>{0}</b> пропускает голосование!";
 
@@ -187,7 +187,9 @@ namespace MafiaManager.Core.Entities
 
         private const string DAY_OVER = "Номинирование завершено!";
 
-        private const string DAY_HANDOFF = "<b>{1}</b> завершил речь. Свою речь говорит: <b>{0}</b>!";
+        private const string DAY_HANDOFF = "<b>{0}</b> завершил речь.";
+
+        private const string DAY_NEXT_PLAYER = "Свою речь говорит: <b>{0}</b>!";
 
         public override string Format(Game game, GameAction action)
         {
@@ -206,7 +208,15 @@ namespace MafiaManager.Core.Entities
             if (!action.TargetID.HasValue)
                 return DAY_OVER;
 
-            return string.Format(DAY_HANDOFF, actor, target);
+            StringBuilder handoff = new();
+
+            if (!string.IsNullOrWhiteSpace(actor))
+                handoff.AppendFormat(DAY_HANDOFF, actor);
+
+            if (handoff.Length > 0)
+                handoff.Append(' ');
+
+            return handoff.AppendFormat(DAY_NEXT_PLAYER, target).ToString();
         }
 
         protected override string ResolveTarget(Game game, GameAction action)

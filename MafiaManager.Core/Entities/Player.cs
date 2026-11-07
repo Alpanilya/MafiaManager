@@ -7,5 +7,7 @@ namespace MafiaManager.Core.Entities
         public int Role { get; set; }
 
         public PlayerState State { get; set; }
+
+        public bool IsSelected { get; set; }
     }
 }

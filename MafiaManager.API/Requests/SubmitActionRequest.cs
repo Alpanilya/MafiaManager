@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using MafiaManager.Core.Entities;
+using System.Collections.Generic;
 
 namespace MafiaManager.Api.Requests
 {
-    public class SubmitActionRequest
+    public class ToggleSelectRequest
     {
-        public int? TargetID { get; set; }
+        public int? PlayerID { get; set; }
     }
 
     public class SubmitVoteActionRequest
@@ -12,8 +13,13 @@ namespace MafiaManager.Api.Requests
         public IReadOnlyDictionary<int, int?> Votes { get; set; }
     }
 
-    public class RejectAction
+    public class RejectActionResponse
     {
         public string Reason { get; set; }
+    }
+
+    public class SwitchGameActionRequest : GameAction
+    {
+        public int Cursor { get; set; }
     }
 }

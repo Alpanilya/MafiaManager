@@ -2,84 +2,12 @@
 using MafiaManager.Core.Interfaces;
 using MafiaManager.Shared.Enums;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MafiaManager.Core.Services
 {
-    public class VoteGameStateService : GameStateService
-    {
-        public override Game Process(StateContext context, IGameLogService logService)
-        {
-            if (context is not VoteContext voteContext)
-                throw new ArgumentException($"Ожидался {nameof(VoteContext)}", nameof(context));
-
-            Game game = context.Game;
-
-            IReadOnlyDictionary<int, int?> votes = voteContext.Votes;
-
-            if (GetEliminatedPlayer(voteContext) is not Player player)
-                throw new InvalidOperationException($"Игроки не приняли единогласного решения!");
-
-            GameAction gameAction = this.CreateAndAddAction(game, GameActionBuilder.Create(game)
-                .SetActionType(ActionType.Kill)
-                .SetTarget(player.ID));
-
-            player.State = PlayerState.Dead;
-
-            logService.Log(game, gameAction);
-
-            this.TryEndPhase(game, logService);
-
-            return game;
-        }
-
-        private static Player GetEliminatedPlayer(VoteContext voteContext)
-        {
-            var votes = voteContext.Votes;
-
-            int? max = votes.Values.Max();
-
-            if (!max.HasValue || max <= 0)
-                return null;
-
-            KeyValuePair<int, int?>[] pairs = [.. votes.Where(v => v.Value == max)];
-
-            if (pairs.Length != 1)
-                return null;
-
-            PlayerCollection players = voteContext.Game.GameSettings.Players;
-
-            return players[pairs[0].Key];
-        }
-
-        protected override bool TryEndPhase(Game game, IGameLogService logService)
-        {
-            PlayerCollection players = game.GameSettings.Players;
-
-            // Сброс состояний игрока
-            foreach (Player player in players)
-            {
-                if (player.State != PlayerState.Nominated)
-                    continue;
-
-                player.State = PlayerState.Alive;
-            }
-
-            game.GameState.Phase = GamePhase.Night;
-
-            return true;
-        }
-
-
-        public override void EnterPhase(Game game, IGameLogService logService)
-        {
-            return;
-        }
-    }
-
     /// <summary>
-    /// Сервис обработки фазы дневного голосования
+    /// Сервис обработки фазы наминации на выбывание
     /// </summary>
     public class DayGameStateService : GameStateService
     {
@@ -102,35 +30,59 @@ namespace MafiaManager.Core.Services
 
             Player player = players[game.CurrentActivePlayer.Value];
 
-            GameActionBuilder gameActionBuilder = null;
+            GameState gameState = game.GameState;
 
-            if (!nominatedPlayer.HasValue)
+            GameActionCollection actions = game.Actions;
+
+            GameAction gameAction = actions.GetActions(gameState, player.ID, ActionType.Nominate);
+
+            Player targetPlayer = players[nominatedPlayer.Value];
+
+            if (targetPlayer.State == PlayerState.Dead)
+                throw new InvalidOperationException($"<b>{targetPlayer.Name}</b> уже мертв и не может быть номинирован!");
+
+            if (gameAction != null)
             {
-                gameActionBuilder = GameActionBuilder.Create(game)
-                    .SetPlayer(game.CurrentActivePlayer)
-                    .SetActionType(ActionType.Skip)
-                    .SetTarget(nominatedPlayer);
-            }
-            else
-            {
-                Player targetPlayer = players[nominatedPlayer.Value];
+                if (gameAction.TargetID.HasValue)
+                {
+                    Player undoPlayer = players[gameAction.TargetID.Value];
 
-                if (targetPlayer.State == PlayerState.Dead)
-                    throw new InvalidOperationException($"<b>{targetPlayer.Name}</b> уже мертв и не может быть номинирован!");
+                    undoPlayer.State = PlayerState.Alive;
+                }
 
-                gameActionBuilder = GameActionBuilder.Create(game)
-                    .SetPlayer(game.CurrentActivePlayer)
-                    .SetActionType(ActionType.Nominate)
-                    .SetTarget(nominatedPlayer);
+                gameAction.TargetID = targetPlayer.ID;
 
                 targetPlayer.State = PlayerState.Nominated;
             }
+            else
+            {
+                GameActionBuilder gameActionBuilder = null;
 
-            game.CurrentActivePlayer = this.GetNextActiveID(game, logService);
+                if (!nominatedPlayer.HasValue)
+                {
+                    gameActionBuilder = GameActionBuilder.Create(game)
+                        .SetPlayer(game.CurrentActivePlayer)
+                        .SetActionType(ActionType.Skip)
+                        .SetTarget(nominatedPlayer);
+                }
+                else
+                {
+                    gameActionBuilder = GameActionBuilder.Create(game)
+                        .SetPlayer(game.CurrentActivePlayer)
+                        .SetActionType(ActionType.Nominate)
+                        .SetTarget(nominatedPlayer);
 
-            GameAction gameAction = this.CreateAndAddAction(game, gameActionBuilder);
+                    targetPlayer.State = PlayerState.Nominated;
+                }
+
+                game.CurrentActivePlayer = this.GetNextActiveID(game, logService);
+
+                gameAction = this.CreateAndAddAction(game, gameActionBuilder);
+            }
 
             logService.Log(game, gameAction);
+
+            players.ResetSelection();
 
             this.TryEndPhase(game, logService);
 
@@ -201,7 +153,66 @@ namespace MafiaManager.Core.Services
 
         public override void EnterPhase(Game game, IGameLogService logService)
         {
+            PlayerCollection players = game.GameSettings.Players;
+
+            players.ResetSelection();
+
             game.CurrentActivePlayer = this.GetNextActiveID(game, logService);
+        }
+
+        public override Game ProcessSwitch(StateContext context, IGameLogService logService)
+        {
+            if (context is not SwitchContext switchContext)
+                throw new ArgumentException($"Ожидался {nameof(SwitchContext)}", nameof(context));
+
+            Game game = context.Game;
+
+            GameState gameState = game.GameState;
+
+            if (gameState?.Phase != GamePhase.Day)
+                return game;
+
+            GameActionCollection actions = game.Actions;
+
+            PlayerCollection players = game.GameSettings.Players;
+
+            Player[] playersAlive = [.. players.GetPlayersAlive()];
+
+            Player currentPlayer = players[game.CurrentActivePlayer.Value];
+
+            // Действия номинаций и пропуска ходов
+            GameAction[] nominatedActions = actions.GetActions(gameState, ActionType.Nominate, ActionType.Skip);
+
+            int cursor = switchContext.Cursor;
+
+            int start = Array.IndexOf(playersAlive, currentPlayer);
+
+            // Сдвиг должен осуществлять на живого игрока
+            int next = Math.Clamp(start + cursor, 0, playersAlive.Length - 1);
+
+            Player nextPlayer = playersAlive.ElementAt(next);
+
+            int? nextActivePlayer = nextPlayer?.ID;
+
+            if (nextActivePlayer.HasValue && nominatedActions.Length > 0)
+            {
+                players.ResetSelection();
+
+                GameAction action = nominatedActions.FirstOrDefault(p => p.PlayerID == nextPlayer.ID);
+
+                // Выбор на игрока, которого номинировал игрок
+                if (action != null && action.TargetID.HasValue)
+                {
+                    Player player = players[action.TargetID.Value];
+
+                    player.IsSelected = true;
+                }
+            }
+
+            if (nextActivePlayer.HasValue)
+                game.CurrentActivePlayer = nextActivePlayer;
+
+            return game;
         }
     }
 }

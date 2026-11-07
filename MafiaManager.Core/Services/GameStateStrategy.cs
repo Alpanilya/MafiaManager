@@ -23,8 +23,9 @@ namespace MafiaManager.Core.Services
 
         public Game ProcessPhase(StateContext stateContext)
         {
-            Game game = stateContext.Game ?? 
-                throw new ArgumentNullException(nameof(stateContext.Game));
+            ArgumentNullException.ThrowIfNull(stateContext.Game);
+
+            Game game = stateContext.Game;
 
             GameState gameState = game.GameState;
 
@@ -50,5 +51,25 @@ namespace MafiaManager.Core.Services
 
             return game;
         }
+
+        public Game ProcessSwitch(StateContext stateContext)
+        {
+            ArgumentNullException.ThrowIfNull(stateContext.Game);
+
+            Game game = stateContext.Game;
+
+            GameState gameState = game.GameState;
+
+            if (gameState.Phase == GamePhase.GameOver)
+                throw new InvalidOperationException("Игра была завершена");
+
+            if (!this._services.TryGetValue(game.GameState.Phase, out IGameStateService service))
+                throw new InvalidOperationException($"Не найден сервис для фазы {gameState.Phase}");
+
+            game = service.ProcessSwitch(stateContext, this._logService);
+
+            return game;
+        }
+
     }
 }
