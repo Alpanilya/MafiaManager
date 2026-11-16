@@ -3,37 +3,16 @@ using MafiaManager.Core.Interfaces;
 using MafiaManager.Core.Utils;
 using MafiaManager.Shared.Enums;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MafiaManager.Core.Services
 {
-    public class StateContext
-    {
-        public Game Game { get; set; }
-    }
-
-    public class NominateContext : StateContext
-    {
-        public int? NomitantedPlayer { get; set; }
-    }
-
-    public class VoteContext : StateContext
-    {
-        public IReadOnlyDictionary<int, int?> Votes { get; set; }
-    }
-
-    public class SwitchContext : StateContext
-    {
-        public int Cursor { get; set; }
-    }
-
     public abstract class GameStateService(IGameLogService gameLogService) : IGameStateService
     {
         protected readonly IGameLogService _gameLogService = gameLogService ??
             throw new ArgumentNullException(nameof(gameLogService));
 
-        public abstract Game Process(StateContext context);
+        public abstract void Process(StateContext context);
 
         /// <summary>
         /// Выбор следующего активного участника
@@ -98,7 +77,9 @@ namespace MafiaManager.Core.Services
             return gameAction;
         }
 
-        public virtual Game ProcessSwitch(StateContext context) => 
-            context?.Game;
+        public virtual void ProcessSwitch(StateContext context)
+        {
+
+        }
     }
 }

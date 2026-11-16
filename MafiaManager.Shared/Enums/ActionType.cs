@@ -7,7 +7,6 @@
     {
         Check, // Проверяет
         Kill, // Убивает
-        Skip, // Пропускает
         Nominate, // Номинирует
         Vote, // Голосует
         PhaseChanged, // Смена фазы

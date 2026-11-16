@@ -1,15 +1,46 @@
-﻿using MafiaManager.Core.Interfaces;
+﻿using MafiaManager.Core.Entities;
+using MafiaManager.Core.Interfaces;
 using MafiaManager.Core.Utils;
 using MafiaManager.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MafiaManager.Core.Entities
+namespace MafiaManager.Core.Services
 {
     public abstract class GameActionMessage : IGameActionMessage
     {
+        private const string NON_EXIST_PLAYER = "<b>{0}</b> выбрал(а) несуществующего игрока с ID <b>{1}</b>!";
+
+        private const string SKIP_ACTION = "<b>{0}</b> пропускает ход!";
+
         public abstract string Format(Game game, GameAction action);
+
+        public virtual string FormatResult(Game game, GameAction action)
+        {
+            return action.Result switch
+            {
+                ActionResult.Skip => FormatSkip(game, action),
+                ActionResult.Fail => FormatFail(game, action),
+                _ => null
+            };
+        }
+
+        protected virtual string FormatSkip(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            return string.Format(SKIP_ACTION, actor);
+        }
+
+        protected virtual string FormatFail(Game game, GameAction action)
+        {
+            string actor = this.ResolveActor(game, action);
+
+            string target = this.ResolveTarget(game, action);
+
+            return string.Format(NON_EXIST_PLAYER, actor, target);
+        }
 
         protected virtual string ResolveActor(Game game, GameAction action)
         {
@@ -46,32 +77,6 @@ namespace MafiaManager.Core.Entities
         }
     }
 
-    public class GameActionSkip : GameActionMessage
-    {
-        private const string NON_EXIST_PLAYER = "<b>{0}</b> выбрал(а) несуществующего игрока с ID <b>{1}</b>";
-
-        private const string SKIP_ACTION = "<b>{0}</b> не сделал(а) свой выбор!";
-
-        private const string SKIP_VOTE = "<b>{0}</b> пропускает голосование!";
-
-        public override string Format(Game game, GameAction action)
-        {
-            string actor = this.ResolveActor(game, action);
-
-            if (action.Phase == GamePhase.Night)
-            {
-                bool emptyResult = action.Result == ActionResult.Fail;
-
-                if (emptyResult)
-                    return string.Format(NON_EXIST_PLAYER, actor, action.TargetID);
-
-                return string.Format(SKIP_ACTION, actor);
-            }
-
-            return string.Format(SKIP_VOTE, actor);
-        }
-    }
-
     public class GameActionCheck : GameActionMessage
     {
         private const string START_CHECK = "<b>{0}</b> начинает проверку <b>{1}</b>. <b>{1}</b><b>{2}</b><b>{3}</b>!";
@@ -89,7 +94,7 @@ namespace MafiaManager.Core.Entities
 
             string checkedFor = isGF ? Constants.SHERIFF_ROLE.Name : Constants.MAFIA_ROLE.Name;
 
-            string status = action.Result == ActionResult.Success ? SEPARATOR : NO;
+            string status = action.CheckResult is true ? SEPARATOR : NO;
 
             string actor = this.ResolveActor(game, action);
 
@@ -117,8 +122,6 @@ namespace MafiaManager.Core.Entities
     {
         private const string NIGHT_KILL = "<b>{0}</b> убивает <b>{1}</b>!";
 
-        private const string VOTE_KILL = "По результату голосования выбывает игрок <b>{0}</b>!";
-
         public override string Format(Game game, GameAction action)
         {
             StringBuilder sb = new();
@@ -127,14 +130,7 @@ namespace MafiaManager.Core.Entities
 
             string target = this.ResolveTarget(game, action);
 
-            if (action.Phase == GamePhase.Night)
-            {
-                sb.AppendFormat(NIGHT_KILL, actor, target);
-            }
-            else
-            {
-                sb.AppendFormat(VOTE_KILL, target);
-            }
+            sb.AppendFormat(NIGHT_KILL, actor, target);
 
             PlayerCollection players = game.GameSettings.Players;
 
@@ -191,22 +187,32 @@ namespace MafiaManager.Core.Entities
 
         private const string DAY_NEXT_PLAYER = "Свою речь говорит: <b>{0}</b>!";
 
-        public override string Format(Game game, GameAction action)
+        private const string NON_EXIST_PLAYER = "<b>{0}</b> выбрал(а) несуществующего игрока с ID <b>{1}</b>";
+
+        private const string SKIP_TURN = "<b>{0}</b> пропускает ход";
+
+        public override string Format(Game game, GameAction action) => action.Phase == GamePhase.Night
+            ? this.FormatNightHandoff(game, action)
+            : this.FormatDayHandoff(game, action);
+
+        private string FormatNightHandoff(Game game, GameAction action)
         {
-            string actor = this.ResolveActor(game, action);
+            if (!action.TargetID.HasValue)
+                return NIGHT_OVER;
 
-            string target = this.ResolveTarget(game, action);
+            string actor = ResolveActor(game, action);
+            string target = ResolveTarget(game, action);
 
-            if (action.Phase == GamePhase.Night)
-            {
-                if (!action.TargetID.HasValue)
-                    return NIGHT_OVER;
+            return string.Format(NIGHT_HANDOFF, actor, target);
+        }
 
-                return string.Format(NIGHT_HANDOFF, actor, target);
-            }
-
+        private string FormatDayHandoff(Game game, GameAction action)
+        {
             if (!action.TargetID.HasValue)
                 return DAY_OVER;
+
+            string actor = ResolveActor(game, action);
+            string target = ResolveTarget(game, action);
 
             StringBuilder handoff = new();
 
@@ -247,15 +253,26 @@ namespace MafiaManager.Core.Entities
     {
         private const string START_VOTE = "Все кандидаты выбраны. Голосование начинается!";
 
-        public override string Format(Game game, GameAction action) =>
-            START_VOTE;
+        private const string SKIP_VOTE = "Голосование было пропущено!";
+
+        private const string VOTE_KILL = "По результату голосования выбывает игрок <b>{0}</b>!";
+
+        public override string Format(Game game, GameAction action)
+        {
+            if (action.Result == null)
+                return START_VOTE;
+
+            return string.Format(VOTE_KILL, this.ResolveTarget(game, action));
+        }
+
+        protected override string FormatSkip(Game game, GameAction action) =>
+            SKIP_VOTE;
     }
 
-    public class GameActionMessageStrategy : IGameActionMessage
+    public class GameActionMessageStrategy : GameActionMessage
     {
         private static readonly Dictionary<ActionType, IGameActionMessage> _actions = new()
         {
-            [ActionType.Skip] = new GameActionSkip(),
             [ActionType.Check] = new GameActionCheck(),
             [ActionType.Nominate] = new GameActionNominate(),
             [ActionType.Kill] = new GameActionKill(),
@@ -265,10 +282,13 @@ namespace MafiaManager.Core.Entities
             [ActionType.Vote] = new GameActionVote(),
         };
 
-        public string Format(Game game, GameAction action)
+        public override string Format(Game game, GameAction action)
         {
             if (!_actions.TryGetValue(action.Type, out IGameActionMessage actionMessage))
                 throw new InvalidOperationException(nameof(action.Type));
+
+            if (actionMessage.FormatResult(game, action) is string formattedMessage)
+                return formattedMessage;
 
             return actionMessage.Format(game, action);
         }

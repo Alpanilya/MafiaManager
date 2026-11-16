@@ -2,7 +2,8 @@
 {
     public enum ActionResult
     {
-        Fail, // Неудачно
         Success, // Успешно
+        Fail, // Неудачно
+        Skip, // Пропуск
     }
 }

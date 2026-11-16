@@ -4,6 +4,6 @@ namespace MafiaManager.Core.Interfaces
 {
     public interface IStepAction
     {
-        public Game Process(Game game, int? nominatedPlayer);
+        public void Process(Game game, int? nominatedPlayer);
     }
 }

@@ -38,7 +38,8 @@ namespace MafiaManager.Api
                 .AddSingleton<IRepository<Game>, GameRepository>()
                 .AddSingleton<IGameActionMessage, GameActionMessageStrategy>()
                 .AddSingleton<IGameLogService, GameLogService>()
-                .AddSingleton<GameStateStrategy>();
+                .AddSingleton<GameStateStrategy>()
+                .AddSingleton<GamePhaseSummaryStrategy>();
 
             services
                 .AddHostedService<RepositoryPollingService>();

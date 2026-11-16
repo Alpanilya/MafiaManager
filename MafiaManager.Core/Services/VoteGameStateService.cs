@@ -12,29 +12,32 @@ namespace MafiaManager.Core.Services
     /// </summary>
     public class VoteGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context)
+        public override void Process(StateContext context)
         {
             if (context is not VoteContext voteContext)
                 throw new ArgumentException($"Ожидался {nameof(VoteContext)}", nameof(context));
 
             Game game = context.Game;
 
-            IReadOnlyDictionary<int, int?> votes = voteContext.Votes;
+            IReadOnlyDictionary<int, int?> votes = voteContext?.Votes;
+
+            GameActionBuilder gameActionBuilder = null;
 
             if (GetEliminatedPlayer(voteContext) is not Player player)
                 throw new InvalidOperationException($"Игроки не приняли единогласного решения!");
 
-            GameAction gameAction = this.CreateAndAddAction(game, GameActionBuilder.Create(game)
-                .SetActionType(ActionType.Kill)
-                .SetTarget(player.ID));
+            gameActionBuilder = GameActionBuilder.Create(game)
+                .SetActionType(ActionType.Vote)
+                .SetActionResult(ActionResult.Success)
+                .SetTarget(player.ID);
 
             player.State = PlayerState.Dead;
+            
+            GameAction gameAction = this.CreateAndAddAction(game, gameActionBuilder);
 
             this._gameLogService.Log(game, gameAction);
 
             this.TryEndPhase(game);
-
-            return game;
         }
 
         private static Player GetEliminatedPlayer(VoteContext voteContext)
@@ -60,6 +63,8 @@ namespace MafiaManager.Core.Services
         {
             PlayerCollection players = game.GameSettings.Players;
 
+            players.ResetSelection();
+
             // Сброс состояний игрока
             foreach (Player player in players)
             {
@@ -77,6 +82,34 @@ namespace MafiaManager.Core.Services
 
         public override void EnterPhase(Game game)
         {
+            Player[] players = [.. game.GameSettings.Players.FilterBy(new() { States = [PlayerState.Nominated] })];
+
+            GameActionBuilder actionBuilder = GameActionBuilder.Create(game)
+                .SetActionType(ActionType.Vote);
+
+            if (players.Length == 0)
+            {
+                actionBuilder.SetActionResult(ActionResult.Skip);
+
+                this.TryEndPhase(game);
+            }
+            else if (players.Length == 1)
+            {
+                Player player = players[0];
+
+                actionBuilder
+                    .SetActionResult(ActionResult.Success)
+                    .SetTarget(player.ID);
+
+                player.State = PlayerState.Dead;
+
+                this.TryEndPhase(game);
+            }
+
+            GameAction action = this.CreateAndAddAction(game, actionBuilder);
+
+            this._gameLogService.Log(game, action);
+
             game.GameSettings.Players.ResetSelection();
 
             return;

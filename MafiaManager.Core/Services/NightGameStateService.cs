@@ -20,7 +20,7 @@ namespace MafiaManager.Core.Services
             [Constants.SHERIFF_ROLE.ID] = new SheriffStepAction(gameLogService)
         };
 
-        public override Game Process(StateContext context)
+        public override void Process(StateContext context)
         {
             if (context is not NominateContext nominateContext)
                 throw new ArgumentException($"Ожидался {nameof(NominateContext)}", nameof(context));
@@ -39,8 +39,6 @@ namespace MafiaManager.Core.Services
             players.ResetSelection();
 
             this.TryEndPhase(game);
-
-            return game;
         }
 
         protected override bool TryEndPhase(Game game)

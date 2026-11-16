@@ -9,13 +9,11 @@ namespace MafiaManager.Core.Services
     /// </summary>
     public class MeetingGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context)
+        public override void Process(StateContext context)
         {
             Game game = context.Game;
 
             this.TryEndPhase(game);
-
-            return game;
         }
 
         protected override bool TryEndPhase(Game game)

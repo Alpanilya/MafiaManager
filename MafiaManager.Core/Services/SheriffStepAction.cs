@@ -8,17 +8,20 @@ namespace MafiaManager.Core.Services
     {
         protected override void ExecuteAction(Game game, int? nominatedPlayer)
         {
+            ActionResult result = this.Validate(game, nominatedPlayer);
+
             PlayerCollection players = game.GameSettings.Players;
 
-            Player player = players[nominatedPlayer.Value];
+            Player player = players.GetOrDefault(nominatedPlayer);
 
-            bool isMafia = players.IsMafia(player);
+            bool? isMafia = player is not null ? players.IsMafia(player) : null;
 
             GameAction gameAction = GameActionBuilder.Create(game)
                 .SetRole(game.CurrentActiveRole)
                 .SetActionType(ActionType.Check)
                 .SetTarget(nominatedPlayer)
-                .SetActionResult(isMafia)
+                .SetActionResult(result)
+                .SetCheckResult(isMafia)
                 .Build();
 
             game.Actions.Add(gameAction);

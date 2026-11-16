@@ -1,55 +1,10 @@
-﻿using MafiaManager.Core.Utils;
-using MafiaManager.Shared.Enums;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace MafiaManager.Core.Entities
 {
-    public class PlayerCollection : EntityCollection<Player, int>
-    {
-        public PlayerCollection() : base() { }
-
-        public IEnumerable<Player> GetPlayersByRole(int roleId) => roleId < 0
-            ? throw new ArgumentOutOfRangeException(nameof(roleId))
-            : this.Where(p => p.Role == roleId);
-
-        public IEnumerable<Player> GetPlayersAliveByRole(int roleId) => roleId < 0
-            ? throw new ArgumentOutOfRangeException(nameof(roleId))
-            : this.GetPlayersByRole(roleId).Where(p => p.State != PlayerState.Dead);
-
-        public IEnumerable<Player> GetPlayersAlive() => 
-            this.Where(p => p.State != PlayerState.Dead);
-
-        public bool IsMafia(Player player) =>
-            Constants.MAFIA_ROLES.Contains(player.Role);
-
-        public bool IsSheriff(Player player) =>
-            Constants.SHERIFF_ROLE.ID == player.Role;
-
-        public Player GetLastAlive()
-        {
-            for (int i = this.Count - 1; i >= 0; i--)
-            {
-                if (this[i].State != PlayerState.Dead)
-                    return this[i];
-            }
-
-            return null;
-        }
-
-        public void ResetSelection()
-        {
-            foreach (Player player in this)
-            {
-                player.IsSelected = false;
-            }
-        }
-    }
-
     public class EntityCollection<TEntity, TKey> : KeyedCollection<TKey, TEntity> 
         where TEntity : Entity<TKey>
     {

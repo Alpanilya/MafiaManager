@@ -120,6 +120,8 @@ export const useGameStore = defineStore('game', () => {
   const { getId, getName } = entityFunctions()
   const { increaseValueBy, validateInput } = numberFunctions()
   const { debounce } = timingFunctions()
+  const debouncedSwitchAction = debounce(switchAction, 200)
+  const debouncedToggleSelect = debounce(onToggleSelectPlayer, 200)
 
   const router = useRouter()
   const route = useRoute()
@@ -131,6 +133,7 @@ export const useGameStore = defineStore('game', () => {
   const isVoted = ref(false)
   const voteStarted = ref(false)
   const isSubmitting = ref(false)
+  const summary = ref(null)
 
   const gameSettings = computed(() => {
     return game.value.gameSettings ?? {}
@@ -189,6 +192,10 @@ export const useGameStore = defineStore('game', () => {
   connection.on('OnRejectedAction', (response) => {
     isSubmitting.value = false
     alert(`Действие отклонено: ${response.reason}`)
+  })
+
+  connection.on('OnPhaseSummary', (response) => {
+    summary.value = response
   })
 
   let timerInterval = null
@@ -441,9 +448,9 @@ export const useGameStore = defineStore('game', () => {
     debouncedSwitchAction()
   }
 
-  const debouncedSwitchAction = debounce(switchAction, 200)
-
-  const debouncedToggleSelect = debounce(onToggleSelectPlayer, 200)
+  function closeSummary() {
+    summary.value = null
+  }
 
   return {
     gameState,
@@ -457,6 +464,7 @@ export const useGameStore = defineStore('game', () => {
     timeLeft: readonly(timeLeft),
     voteStarted: readonly(voteStarted),
     isSubmitting: readonly(isSubmitting),
+    summary: readonly(summary),
     isSelectedRole,
     toggleTimer,
     resetTimer,
@@ -467,6 +475,7 @@ export const useGameStore = defineStore('game', () => {
     onVoteCompleted,
     submitVoteResult,
     changeCursor,
+    closeSummary,
   }
 })
 
@@ -648,7 +657,7 @@ export const useVote = defineStore('vote', () => {
   const maxVote = computed(() => alivePlayers.value.length)
 
   const inVote = computed(() => {
-    return gameState.value?.phase === 2
+    return gameState.value?.phase === 2 && nominatedPlayers.value.length > 0
   })
 
   watch(inVote, (newVal) => {

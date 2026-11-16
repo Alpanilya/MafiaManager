@@ -1,24 +1,8 @@
 ﻿using MafiaManager.Shared.Enums;
 using System;
-using System.Linq;
 
 namespace MafiaManager.Core.Entities
 {
-    public class GameActionCollection : EntityCollection<GameAction, Guid>
-    {
-        public GameAction[] GetActions(GameState state, params ActionType[] actionType) =>
-            [.. this.Where(a => actionType.Contains(a.Type) && a.Day == state.Day && a.Phase == state.Phase) ];
-
-        public GameAction GetAction(GameState state, int? playerID, params ActionType[] actionType)
-        {
-            var collection = this.GetActions(state, actionType);
-
-            return playerID.HasValue
-                ? collection.SingleOrDefault(p => p.PlayerID == playerID)
-                : collection.SingleOrDefault();
-        }
-    }
-
     public class GameAction : Entity<Guid>
     {
         public GamePhase Phase { get; set; }
@@ -34,6 +18,8 @@ namespace MafiaManager.Core.Entities
         public ActionType Type { get; set; }
 
         public ActionResult? Result { get; set; }
+
+        public bool? CheckResult { get; set; }
     }
 
     public class GameActionBuilder
@@ -102,6 +88,13 @@ namespace MafiaManager.Core.Entities
             this._gameAction.Phase = gameState.Phase;
 
             this._gameAction.Day = gameState.Day;
+
+            return this;
+        }
+
+        public GameActionBuilder SetCheckResult(bool? checkResult)
+        {
+            this._gameAction.CheckResult = checkResult;
 
             return this;
         }

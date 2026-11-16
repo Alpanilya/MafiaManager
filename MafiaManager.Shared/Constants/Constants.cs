@@ -15,5 +15,7 @@ namespace MafiaManager.Shared.Constants
         public const string ON_GAMEDELETED_EVENT = "OnGameDeleted";
 
         public const string ON_REJECTED_ACTION = "OnRejectedAction";
+
+        public const string ON_PHASE_SUMMARY = "OnPhaseSummary";
     }
 }

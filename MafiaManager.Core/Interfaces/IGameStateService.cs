@@ -11,8 +11,8 @@ namespace MafiaManager.Core.Interfaces
         /// <summary>
         /// Выполняет обработку текущей фазы игры
         /// </summary>
-        /// <param name="StateContext">Контекст состояния (<see cref="StateContext"/>)</param>
-        public Game Process(StateContext context);
+        /// <param name="context">Контекст состояния (<see cref="StateContext"/>)</param>
+        public void Process(StateContext context);
 
         /// <summary>
         /// Выполняет обработку начальных состояний фазы
@@ -30,7 +30,19 @@ namespace MafiaManager.Core.Interfaces
         /// <summary>
         /// Выполняет обработку переключения между действующими игроками текущей фазы
         /// </summary>
-        /// <param name="StateContext">Контекст состояния (<see cref="StateContext"/>)</param>
-        public Game ProcessSwitch(StateContext context);
+        /// <param name="context">Контекст состояния (<see cref="StateContext"/>)</param>
+        public void ProcessSwitch(StateContext context);
+    }
+
+    /// <summary>
+    /// Представляет сервис обработки сводной информации по фазе игры
+    /// </summary>
+    public interface IGamePhaseSummaryService
+    {
+        /// <summary>
+        /// Создание сводной информации по фазе игры
+        /// </summary>
+        /// <param name="context">Контекст состояния (<see cref="StateContext"/>)</param>
+        public GamePhaseSummary ProcessSummary(SummaryContext context);
     }
 }

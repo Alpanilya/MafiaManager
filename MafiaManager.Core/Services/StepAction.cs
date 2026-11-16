@@ -10,48 +10,23 @@ namespace MafiaManager.Core.Services
         protected readonly IGameLogService _gameLogService = gameLogService ?? 
             throw new ArgumentNullException(nameof(gameLogService));
 
-        public Game Process(Game game, int? nominatedPlayer)
-        {
-            GameAction gameAction = null;
-
-            try
-            {
-                if (!nominatedPlayer.HasValue)
-                {
-                    gameAction = GameActionBuilder.Create(game)
-                        .SetRole(game.CurrentActiveRole)
-                        .SetActionType(ActionType.Skip)
-                        .SetTarget(nominatedPlayer)
-                        .Build();
-
-                    return game;
-                }
-
-                if (!game.GameSettings.Players.Contains(nominatedPlayer.Value))
-                {
-                    gameAction = GameActionBuilder.Create(game)
-                        .SetRole(game.CurrentActiveRole)
-                        .SetActionType(ActionType.Skip)
-                        .SetTarget(nominatedPlayer)
-                        .SetActionResult(ActionResult.Fail)
-                        .Build();
-
-                    return game;
-                }
-
-                this.ExecuteAction(game, nominatedPlayer);
-
-                return game;
-            }
-            finally
-            {
-                if (gameAction != null)
-                    game.Actions.Add(gameAction);
-
-                this._gameLogService?.Log(game, gameAction);
-            }
-        }
+        public void Process(Game game, int? nominatedPlayer) =>
+            this.ExecuteAction(game, nominatedPlayer);
 
         protected abstract void ExecuteAction(Game game, int? nominatedPlayer);
+
+        protected virtual ActionResult Validate(Game game, int? nominatedPlayer)
+        {
+            if (!nominatedPlayer.HasValue)
+            {
+                return ActionResult.Skip;
+            }
+            else if (game.GameSettings.Players.GetOrDefault(nominatedPlayer) is null)
+            {
+                return ActionResult.Fail;
+            }
+
+            return ActionResult.Success;
+        }
     }
 }

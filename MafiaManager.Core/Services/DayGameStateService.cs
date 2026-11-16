@@ -11,7 +11,7 @@ namespace MafiaManager.Core.Services
     /// </summary>
     public class DayGameStateService(IGameLogService gameLogService) : GameStateService(gameLogService)
     {
-        public override Game Process(StateContext context)
+        public override void Process(StateContext context)
         {
             if (context is not NominateContext nominateContext)
                 throw new ArgumentException($"Ожидался {nameof(NominateContext)}", nameof(context));
@@ -21,10 +21,10 @@ namespace MafiaManager.Core.Services
             int? nominatedPlayer = nominateContext.NomitantedPlayer;
 
             if (this.TryEndPhase(game))
-                return game;
+                return;
 
             if (!game.CurrentActivePlayer.HasValue)
-                return game;
+                return;
 
             PlayerCollection players = game.GameSettings.Players;
 
@@ -34,7 +34,13 @@ namespace MafiaManager.Core.Services
 
             GameActionCollection actions = game.Actions;
 
-            GameAction gameAction = actions.GetAction(gameState, player.ID, ActionType.Nominate, ActionType.Skip);
+            GameAction gameAction = actions.GetAction(new()
+            {
+                Phase = gameState.Phase,
+                Day = gameState.Day,
+                PlayerID = player.ID,
+                Types = [ActionType.Nominate]
+            });
 
             Player targetPlayer = players.GetOrDefault(nominatedPlayer);
 
@@ -63,22 +69,18 @@ namespace MafiaManager.Core.Services
             }
             else
             {
-                GameActionBuilder gameActionBuilder = null;
-
-                if (!nominatedPlayer.HasValue)
-                {
-                    gameActionBuilder = GameActionBuilder.Create(game)
-                        .SetPlayer(game.CurrentActivePlayer)
-                        .SetActionType(ActionType.Skip)
-                        .SetTarget(nominatedPlayer);
-                }
-                else
-                {
-                    gameActionBuilder = GameActionBuilder.Create(game)
+                GameActionBuilder gameActionBuilder = gameActionBuilder = GameActionBuilder.Create(game)
                         .SetPlayer(game.CurrentActivePlayer)
                         .SetActionType(ActionType.Nominate)
                         .SetTarget(nominatedPlayer);
 
+                if (!nominatedPlayer.HasValue)
+                {
+                    gameActionBuilder
+                        .SetActionResult(ActionResult.Skip);
+                }
+                else
+                {
                     targetPlayer.State = PlayerState.Nominated;
                 }
 
@@ -93,8 +95,6 @@ namespace MafiaManager.Core.Services
             players.ResetSelection();
 
             this.TryEndPhase(game);
-
-            return game;
         }
 
         protected override bool TryEndPhase(Game game)
@@ -102,11 +102,6 @@ namespace MafiaManager.Core.Services
             if (game.CurrentActivePlayer == null)
             {
                 game.GameState.Phase = GamePhase.Vote;
-
-                GameAction gameAction = this.CreateAndAddAction(game, GameActionBuilder.Create(game)
-                    .SetActionType(ActionType.Vote));
-
-                this._gameLogService.Log(game, gameAction);
 
                 game.CurrentActivePlayer = null;
 
@@ -141,14 +136,22 @@ namespace MafiaManager.Core.Services
 
             GameActionCollection gameActions = game.Actions;
 
+            GameState gameState = game.GameState;
+
             // Переключаемся на игрока, который еще не совершал номинации
             for (int i = 0; i < playersAlive.Length; i++)
             {
                 Player currentPlayer = playersAlive[i];
 
-                var actions = gameActions.GetAction(game.GameState, currentPlayer.ID, ActionType.Nominate, ActionType.Skip);
+                GameAction action = gameActions.GetAction(new()
+                {
+                    Phase = gameState.Phase,
+                    Day = gameState.Day,
+                    PlayerID = currentPlayer.ID,
+                    Types = [ActionType.Nominate]
+                });
 
-                if (actions != null)
+                if (action != null)
                     continue;
 
                 return currentPlayer.ID;
@@ -166,7 +169,7 @@ namespace MafiaManager.Core.Services
             game.CurrentActivePlayer = this.GetNextActiveIDWithLog(game);
         }
 
-        public override Game ProcessSwitch(StateContext context)
+        public override void ProcessSwitch(StateContext context)
         {
             if (context is not SwitchContext switchContext)
                 throw new ArgumentException($"Ожидался {nameof(SwitchContext)}", nameof(context));
@@ -176,7 +179,7 @@ namespace MafiaManager.Core.Services
             GameState gameState = game.GameState;
 
             if (gameState?.Phase != GamePhase.Day)
-                return game;
+                return;
 
             GameActionCollection actions = game.Actions;
 
@@ -187,7 +190,12 @@ namespace MafiaManager.Core.Services
             Player currentPlayer = players.GetOrDefault(game.CurrentActivePlayer);
 
             // Действия номинаций и пропуска ходов
-            GameAction[] nominatedActions = actions.GetActions(gameState, ActionType.Nominate, ActionType.Skip);
+            GameAction[] nominatedActions = actions.GetActions(new()
+            {
+                Phase = gameState.Phase,
+                Day = gameState.Day,
+                Types = [ ActionType.Nominate ]
+            });
 
             int cursor = switchContext.Cursor;
 
@@ -217,8 +225,6 @@ namespace MafiaManager.Core.Services
 
             if (nextActivePlayer.HasValue)
                 game.CurrentActivePlayer = nextActivePlayer;
-
-            return game;
         }
     }
 }
