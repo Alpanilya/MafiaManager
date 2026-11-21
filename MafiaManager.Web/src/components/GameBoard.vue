@@ -22,6 +22,7 @@ const {
   currentActiveRole,
   сurrentActivePlayer,
   gameLog,
+  timerRunning,
 } = storeToRefs(gameStore)
 
 const {
@@ -55,7 +56,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="!inEdit" class="container-fluid bg-dark p-3 vh-100 overflow-hidden">
+  <div v-if="!inEdit" class="container-fluid bg-dark p-3 overflow-auto">
     <div class="row g-3">
       <div class="col-lg-3">
         <!--- Фаза -->
@@ -94,7 +95,7 @@ watch(
                 :style="{ '--role-color': role.color }"
                 :class="{ 'is-selected': isSelectedRole(role) }"
               >
-                <div class="d-flex align-items-center justify-content-between px-2">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-2">
                   <div class="d-flex">
                     <span class="fw-bold" style="opacity: 0.8">Ход:</span>
                     <span class="fw-bold px-2"> {{ getName(role) }} </span>
@@ -208,7 +209,7 @@ watch(
           </div>
 
           <div class="card-body overflow-auto">
-            <div class="row row-cols-lg-6 g-3">
+            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
               <div v-for="player in players" :key="getId(player)" class="col">
                 <div
                   class="card player-card"
