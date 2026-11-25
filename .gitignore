@@ -361,7 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-*.json
 
 # Logs
 logs
@@ -402,3 +401,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+/MafiaManager.API/Properties/launchSettings.json
+/MafiaManager.API/appsettings.Development.json
+/MafiaManager.API/appsettings.json
+/MafiaManager.WEB/.oxlintrc.json
+/MafiaManager.WEB/.prettierrc.json
+/global.json
