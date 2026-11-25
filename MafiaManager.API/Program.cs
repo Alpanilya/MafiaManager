@@ -6,7 +6,9 @@ using MafiaManager.Core.Options;
 using MafiaManager.Core.Repositories;
 using MafiaManager.Core.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace MafiaManager.Api
 {
@@ -44,14 +46,20 @@ namespace MafiaManager.Api
             services
                 .AddHostedService<RepositoryPollingService>();
 
+            services.Configure<ForwardedHeadersOptions>(o =>
+            {
+                o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                o.KnownIPNetworks.Clear();
+                o.KnownProxies.Clear();
+            });
+
             var app = builder
                 .Build();
 
-            app
-                .UseHttpsRedirection();
+            app.UseForwardedHeaders();
 
-            app
-                .UseCors("AllowWebClient");
+            if (app.Environment.IsDevelopment())
+                app.UseHttpsRedirection();
 
             app
                 .MapControllers();
